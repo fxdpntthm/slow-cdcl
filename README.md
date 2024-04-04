@@ -50,7 +50,8 @@ mentations such as dictionaries or maps.
     - Benchmarks for final evaluation will be released later
 
 #### Proj 2 specific stuff
-- allowed to use off-the-shelf CDCL solver + off-the-shelf LRA solver
+- Build a CDCL resolution based solver
+- Interface it with an off the shelf theory (LRA) solver
 
 - **Benchmarks/evaluation**
     - https://smtlib.cs.uiowa.edu/benchmarks.shtml
