@@ -20,6 +20,14 @@ $ pip install -r requirements.txt
 $ python -i example.py
 ```
 
+- run
+``` 
+python -i cdcl.py <filename>
+```
+
+#### Tests
+- in the `tests` folder, just copied all the examples from from piazza/project description
+
 ## Todo
 
 #### Input
