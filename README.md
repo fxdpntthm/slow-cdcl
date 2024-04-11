@@ -21,55 +21,43 @@ $ python -i example.py
 ```
 
 - run
-``` 
+```
 python -i cdcl.py <filename>
 ```
 
 #### Tests
 - in the `tests` folder, just copied all the examples from from piazza/project description
 
-## Todo
+### Project 2:
 
-#### Input
-- Proj 1 -      http://www.satcompetition.org/2009/format-benchmarks2009.html
-- Proj 2/3: 
-    - https://smtlib.cs.uiowa.edu/papers/smt-lib-reference-v2.6-r2021-05-12.pdf
-    - pySMT to parse - http://www.pysmt.org/
+#### Tasks: Part A
 
-#### Output
-- Proj 1 - https://satcompetition.github.io/2024/output.html
-- Proj 2/3 - Not sure, but i think same as above?
+1. Build a CDCL solver
+   - Use an appropriate term representation of propositional logic.
+   - Use the appropriate translation of the logic rules to come up with an assignment
 
-#### Proj 1 specific stuff
+#### Tasks: Part B
+1. Interface the CDCL solver with the LIA theory formulas
+2. Parse the smt-lib2 files and store them in an appropriate AST
+3. Convert them to a Propositional logic formula
+4. ask the CDCL solver if an assigment is possible
+   - If it is satisfiable send it to the theory solver to come up with an assigment or output unsat
+5. come up with an unsat core -- details unclear.
 
 
+
+####  Notes:
 - Allowed to refer https://kienyew.github.io/CDCL-SAT-Solver-from-Scratch/, but if we do that, we have to add our own enhancements such as:
     - the Variable State Independent Decaying Sum (VSIDS) heuristic, to pick an unassigned
 variable for Decide;
     - a Luby policy, or an arithmetic policy for Restart;
-    - a time and space-efficient implementation using Numpy arrays instead of less efficient imple-
-mentations such as dictionaries or maps.
+    - a time and space-efficient implementation using Numpy arrays instead of less efficient implementations such as dictionaries or maps.
 
-- Two watched literals -  https://www.cs.upc.edu/~oliveras/LAI/cdcl.pdf
-- VSIDS - https://www.princeton.edu/~chaff/publication/DAC2001v56.pdf  (Section 2 and 3)
+#### Input
 
-- **Benchmarks/evaluation**
-    - https://www.cs.ubc.ca/~hoos/SATLIB/benchm.html
-    - Benchmarks for final evaluation will be released later
+- https://smtlib.cs.uiowa.edu/papers/smt-lib-reference-v2.6-r2021-05-12.pdf
+- pySMT to parse - http://www.pysmt.org/
 
-#### Proj 2 specific stuff
-- Build a CDCL resolution based solver
-- Interface it with an off the shelf theory (LRA) solver
+#### Output
 
-- **Benchmarks/evaluation**
-    - https://smtlib.cs.uiowa.edu/benchmarks.shtml
-    - Benchmarks for final evaluation will be released later
-
-#### Proj 3 specific stuff
-- https://www.cs.princeton.edu/courses/archive/spr08/cos226/lectures/01UnionFind.pdf
-- https://www.cs.upc.edu/~oliveras/IC.pdf
-- https://web.eecs.umich.edu/~weimerw/2011-6610/reading/nelson-oppen-congruence.pdf
-
-- **Benchmarks/evaluation**
-    - Have to make our own tests
-    - Benchmarks for final evaluation will be released later
+- Proj 2/3 - Not sure, but i think same as above?
