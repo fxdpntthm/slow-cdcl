@@ -1,4 +1,5 @@
 from IO import read_input
+import sys
 
 def create_skeleton(formula):
     atoms = formula.get_atoms()
