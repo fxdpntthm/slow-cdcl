@@ -1,65 +1,69 @@
 import sys
-from IO import read_input
 
-def create_skeleton(formula):
-    atoms = formula.get_atoms()
-    atom_map = {}
-    atom_rev = {}
-    i = 1
-    for atom in atoms:
-        atom_map[atom] = i
-        atom_rev[i] = atom
-        i += 1
-
-    return (atom_map,atom_rev)
+"""
+The main file that gives an assignment to a Propositional Boolean Logic formula in a CNF format
+or returns UNSAT
+"""
 
 
-def skel_helper(formula, atom_map):
-    res = []
-    for arg in formula.args():
-        if arg in atom_map:
-            res.append(atom_map[arg])
-        elif arg.is_not():
-            res.append(-1 * atom_map[arg.arg(0)])
-        else:
-            r2 = skel_helper(arg,atom_map)
-            res.append(r2)
+def solver (clause_set):
+    """
+    The solver takes a formula or the clause_set
+    of a list of lists. The inner list are the set of literals.
 
-    return res
+    the clause set [[1,-2,3], [2,3], [2], [-1, 2]]
+    represents the formula
+    [(A \/ -B \/ C) /\  (B \/ C) /\  B /\ (-A \/ B)]
 
-def skel(formula,atom_map):
-    res = skel_helper(formula,atom_map)
-    r2 = []
-    for r in res:
-        if type(r) == int:
-            r2.append([r])
-        else:
-            r2.append(r)
-
-    return r2
-
-#alternative skeleton method
-def skel2(formula, atom_map):
-    res = []
-    for arg in formula.args():
-        atoms = arg.get_atoms()
-        r2 = []
-        for a in atoms:
-            r2.append(atom_map[a])
-        res.append(r2)
+    """
+    return "UNSAT"
 
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("no input file passed")
-        sys.exit()
-    else:
-        formula = read_input(sys.argv[1])
-        skel_map,rev_map = create_skeleton(formula)
-        skeleton = skel(formula,skel_map)
-        
-        print("Clauses: " + str(formula))
-        print("Atoms: " + str(formula.get_atoms()))
-        print("Atom map: " + str(skel_map))
-        print("Boolean skeleton: " + str(skeleton))
-      
+"""
+1 |-> x + y <= 0
+2 |-> 4*x + z <= 1
+"""
+
+
+def solver_step(clause_set, delta, model, conflict_clause):
+    """
+    decides which rule to apply, returns the modified, clause_set, model, delta and C
+    """
+    if propgate_possible(clause_set):
+        return propogate(clause_set, delta, model, conflict_clause)
+
+    else: return (clause_set, delta, model, conflict_clause)
+
+def propgate_possible(clause_set):
+    """
+    Checks if there's a single literal clause in the clause set
+    """
+    return False
+
+
+def propogate(clause_set, delta, model, conflict_clause):
+    """
+    Applies propogate on the clause set
+    """
+    return (clause_set, delta, model, conflict_clause)
+
+def decide(clause_set, delta, model, conflict_clause):
+    """
+    Generates a decision point in the model keeps track of where to back jump?
+    """
+    return (clause_set, delta, model, conflict_clause)
+
+
+def explain(clause_set, delta, model, conflict_clause):
+    """
+    Modifies the conflict clause
+    """
+    return (clause_set, delta, model, conflict_clause)
+
+
+
+def backjump(clause_set, delta, model, conflict_clause):
+    """
+    backjumps to an appropriate decision point.
+    """
+    return (clause_set, delta, model, conflict_clause)
