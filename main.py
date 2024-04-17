@@ -103,7 +103,7 @@ def build_skeleton(formula, atom_map):
     the skel_map contains the mappings for atoms to numbers
     {1 -> x + y >= 0, 2 -> B, 3 -> D, 4 -> y <=0 , 5 -> C}
     """
-    res = []
+    formula_skeleton = []
     for clause in formula.args():
         clause_skeleton = []
         if len(clause.args()) == 0:
@@ -114,10 +114,9 @@ def build_skeleton(formula, atom_map):
                 if literal.is_not():
                     clause_skeleton.append(-1 * atom_map[literal.arg(0)])
                 else: clause_skeleton.append(atom_map[literal])
+        clause_skeleton.sort
         res.append(clause_skeleton)
-    for c in res:
-        c.sort()
-    return res
+    return formula_skeleton
 
 
 if __name__ == "__main__":
