@@ -22,7 +22,7 @@ def build_skeleton_map(formula):
 def build_skeleton(formula, atom_map):
     """
     The input formula is in CNF form and may contain theory literals,
-       eg. !(x + y >= 0) \/ B /\ -D /\ y <= 0 \/ C
+       eg. (!(x + y >= 0) \/ B)  /\  ! D  /\   (y <= 0 \/ C)
     Computes the boolean skeleton of the formula:
        [[-1, 2], [-3] ,[4, 5]]
 
@@ -40,8 +40,8 @@ def build_skeleton(formula, atom_map):
                 if literal.is_not():
                     clause_skeleton.append(-1 * atom_map[literal.arg(0)])
                 else: clause_skeleton.append(atom_map[literal])
-        clause_skeleton.sort
-        res.append(clause_skeleton)
+        clause_skeleton.sort()
+        formula_skeleton.append(clause_skeleton)
     return formula_skeleton
 
 
@@ -51,10 +51,10 @@ if __name__ == "__main__":
         sys.exit()
     else:
         formula = read_input(sys.argv[1])
-        skel_map,rev_map = create_skeleton_map(formula)
+        skel_map,rev_map = build_skeleton_map(formula)
         skeleton = build_skeleton(formula, skel_map)
 
-        print("Clauses: " + str(formula))
+        print("Clause Set: " + str(formula))
         print("Atoms: " + str(formula.get_atoms()))
         print("Atom map: " + str(skel_map))
         print("Boolean skeleton: " + str(skeleton))
