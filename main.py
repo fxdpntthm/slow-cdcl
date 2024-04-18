@@ -10,7 +10,7 @@ from pysmt.exceptions import NoSolverAvailableError
 from IO import read_input
 
 import sys
-
+from os.path import exists
 
 
 SOLVER_NAME = "mathsat" # Note: The API version is called 'msat'
@@ -92,19 +92,27 @@ def build_formula(skeleton, atom_map):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("no input file passed")
-        sys.exit()
-    else:
-        formula = read_input(sys.argv[1])
-        skel_map,rev_map = build_skeleton_map(formula)
-        skeleton = build_skeleton(formula, skel_map)
+        sys.exit("Error: No input file passed.")
+    fpath = sys.argv[1]
+    if not exists(fpath):
+        sys.exit(f"Error: {fpath} does not exists.")
 
-        print("Clause Set: " + str(formula))
-        print("Atoms: " + str(formula.get_atoms()))
-        print("Atom map: " + str(skel_map))
-        print("Boolean skeleton: " + str(skeleton))
+    # Build the FNode formula
+    formula = read_input(fpath)
+    # build the skeleton map
+    skel_map,rev_map = build_skeleton_map(formula)
+    # build the skeleton
+    skeleton = build_skeleton(formula, skel_map)
+
+    print("Clause Set: " + str(formula))
+    print("Atoms: " + str(formula.get_atoms()))
+    print("Atom map: " + str(skel_map))
+    print("Boolean skeleton: " + str(skeleton))
 
 
-        with Solver(name=SOLVER_NAME, logic=QF_LRA) as slvr:
-            res = slvr.solve()
-            assert res, "was expecting '%s' to be SAT" % formula
+    with Solver(name=SOLVER_NAME, logic=QF_LRA) as slvr:
+        res = slvr.solve()
+        if res:
+            print("SAT")
+        else:
+            print("UNSAT")
