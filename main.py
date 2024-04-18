@@ -1,6 +1,25 @@
+
+# inspirations from pysmt docs
+# https://pysmt.readthedocs.io/en/latest/tutorials.html#how-to-access-functionalities-of-solvers-not-currently-wrapped-by-pysmt
+
+from pysmt.logics import QF_UFLRA, QF_UFIDL, QF_LRA, QF_IDL, QF_LIA
+from pysmt.shortcuts import get_env, GT, Solver, Symbol, And, Or, Not
+from pysmt.typing import REAL
+from pysmt.exceptions import NoSolverAvailableError
+
 from IO import read_input
+
 import sys
 
+
+
+SOLVER_NAME = "mathsat" # Note: The API version is called 'msat'
+SOLVER_PATH = ["/usr/local/bin/cvc5"] # Path to the solver
+SOLVER_LOGICS = [QF_UFLRA] # Some of the supported logics
+
+
+env = get_env()
+env.factory.add_generic_solver(SOLVER_NAME, SOLVER_PATH, SOLVER_LOGICS)
 
 def build_skeleton_map(formula):
     """
@@ -27,10 +46,11 @@ def build_skeleton(formula, atom_map):
        [[-1, 2], [-3] ,[4, 5]]
 
     the skel_map contains the mappings for atoms to numbers
-    {1 -> x + y >= 0, 2 -> B, 3 -> D, 4 -> y <=0 , 5 -> C}
+    {x + y >= 0 -> 1, B -> 2, D -> 3, y <=0 -> 4, C -5}
     """
     formula_skeleton = []
     for clause in formula.args():
+        # Each clause is either a literal, negated literal, OR atoms
         clause_skeleton = []
         if len(clause.args()) == 0:
             # this is a singleton clause so just append its lookup
@@ -43,6 +63,31 @@ def build_skeleton(formula, atom_map):
         clause_skeleton.sort()
         formula_skeleton.append(clause_skeleton)
     return formula_skeleton
+
+def build_formula(skeleton, atom_map):
+    """
+    inverse of build_skeleton function.
+    Given a boolean skeleton and a reverse map of the atom_map
+    return the QF_LRA formula.
+
+    Eg. the input skeleton is:
+                [[-1, 2], [-3] ,[4, 5]]
+
+    the atom_map is:
+               {1 -> x + y >= 0, 2 -> B, 3 -> D, 4 -> y <=0 , 5 -> C}
+
+    returns (!(x + y >= 0) \/ B)  /\  ! D  /\   (y <= 0 \/ C)
+    """
+    clauses = []
+    for c in skeleton:
+        atoms = []
+        for l in c:
+            if l < 0:
+                atoms.append(Not(atom_map[-1*l]))
+            else:
+                atoms.append(atom_map[l])
+        clauses.append(Or(atoms))
+    return And(clauses)
 
 
 if __name__ == "__main__":
@@ -58,3 +103,8 @@ if __name__ == "__main__":
         print("Atoms: " + str(formula.get_atoms()))
         print("Atom map: " + str(skel_map))
         print("Boolean skeleton: " + str(skeleton))
+
+
+        with Solver(name=SOLVER_NAME, logic=QF_LRA) as slvr:
+            res = slvr.solve()
+            assert res, "was expecting '%s' to be SAT" % formula
