@@ -12,6 +12,7 @@ from IO import read_input
 
 import sys
 from os.path import exists
+import time
 
 
 # SOLVER_NAME = "z3" # Note: The API version is called 'msat'
@@ -109,17 +110,18 @@ if __name__ == "__main__":
 
     with Solver(name="z3", logic="QF_LRA", unsat_cores_mode="all") as solver:
         solver.set_option(":produce-models", "true")
-
+        t1 = time.time()
         solver.add_assertion(formula)
         sat = solver.solve()
-
+        t2 = time.time()
         if sat:
-            print("sat")
+            print("sat", t2 - t1)
+
             m = solver.get_model()
             for v in free_vars:
                 print(f"{v} := {m.get_value(v)}")
         else:
-            print("unsat")
+            print("unsat", t2 - t1)
             ucore = solver.get_unsat_core()
             blocking_clause = And(list(ucore))
             # print(f"blocking clause = {blocking_clause}")
