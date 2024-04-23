@@ -117,7 +117,7 @@ if __name__ == "__main__":
             print("sat")
             m = solver.get_model()
             for v in free_vars:
-                print(f"{v} = {m.get_value(v)}")
+                print(f"{v} := {m.get_value(v)}")
         else:
             print("unsat")
             ucore = solver.get_unsat_core()
