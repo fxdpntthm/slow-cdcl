@@ -3,9 +3,10 @@
 # https://pysmt.readthedocs.io/en/latest/tutorials.html#how-to-access-functionalities-of-solvers-not-currently-wrapped-by-pysmt
 
 from pysmt.logics import QF_UFLRA, QF_UFIDL, QF_LRA, QF_IDL, QF_LIA
-from pysmt.shortcuts import get_env, GT, Solver, Symbol, And, Or, Not
+from pysmt.shortcuts import get_env, GT, Solver, Symbol, And, Or, Not, is_unsat, is_sat, get_unsat_core, get_model
 from pysmt.typing import REAL
 from pysmt.exceptions import NoSolverAvailableError
+from pysmt.rewritings import conjunctive_partition
 
 from IO import read_input
 
@@ -13,13 +14,10 @@ import sys
 from os.path import exists
 
 
-SOLVER_NAME = "mathsat" # Note: The API version is called 'msat'
-SOLVER_PATH = ["/usr/local/bin/cvc5"] # Path to the solver
-SOLVER_LOGICS = [QF_UFLRA] # Some of the supported logics
+# SOLVER_NAME = "z3" # Note: The API version is called 'msat'
+# SOLVER_PATH = ["/usr/local/bin/z3"] # Path to the solver
+# SOLVER_LOGICS = [QF_LRA] # Some of the supported logics
 
-
-env = get_env()
-env.factory.add_generic_solver(SOLVER_NAME, SOLVER_PATH, SOLVER_LOGICS)
 
 def build_skeleton_map(formula):
     """
@@ -98,21 +96,30 @@ if __name__ == "__main__":
         sys.exit(f"Error: {fpath} does not exists.")
 
     # Build the FNode formula
-    formula = read_input(fpath)
+    formula, free_vars = read_input(fpath)
     # build the skeleton map
     skel_map,rev_map = build_skeleton_map(formula)
     # build the skeleton
     skeleton = build_skeleton(formula, skel_map)
 
-    print("Clause Set: " + str(formula))
-    print("Atoms: " + str(formula.get_atoms()))
-    print("Atom map: " + str(skel_map))
-    print("Boolean skeleton: " + str(skeleton))
+    # print("Clause Set: " + str(formula))
+    # print("Atoms: " + str(formula.get_atoms()))
+    # print("Atom map: " + str(skel_map))
+    # print("Boolean skeleton: " + str(skeleton))
 
+    with Solver(name="z3", logic="QF_LRA", unsat_cores_mode="all") as solver:
+        solver.set_option(":produce-models", "true")
 
-    with Solver(name=SOLVER_NAME, logic=QF_LRA) as slvr:
-        res = slvr.solve()
-        if res:
-            print("SAT")
+        solver.add_assertion(formula)
+        sat = solver.solve()
+
+        if sat:
+            print("sat")
+            m = solver.get_model()
+            for v in free_vars:
+                print(f"{v} = {m.get_value(v)}")
         else:
-            print("UNSAT")
+            print("unsat")
+            ucore = solver.get_unsat_core()
+            blocking_clause = And(list(ucore))
+            # print(f"blocking clause = {blocking_clause}")
