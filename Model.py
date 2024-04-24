@@ -4,12 +4,14 @@ class Model:
     """
     def __init__(self):
         self.data = []
+        self.decides = []
         
     def add(self, lit):
         self.data.append(lit)
 
     def add_decide(self,lit):
         self.data.append([lit])
+        self.decides.append(len(self.data) - 1)
         
     def flat(self):
         return list(map(lambda x: x[0] if type(x) == list else x, self.data))
@@ -24,18 +26,16 @@ class Model:
         return False
     
     def pop_decide(self):
-        cut = -1
-        for i in range(len(self.data) - 1, -1):
-            if type(self.data[i]) == list:
-                cut = i
-                break
-        
-        if cut < 0:
+        if not self.has_decide():
             return 0
-        else:
-            val = self.data[cut][0]
-            self.data = self.data[:cut]
-            return val
+
+        decision = self.decides.pop()
+        val = self.data[decision][0]
+        self.data = self.data[:decision]
+        return val
+
+    def has_decide(self):
+        return len(self.decides) > 0
 
     def print(self):
         return str(self.data)

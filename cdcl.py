@@ -31,16 +31,19 @@ def solver (clause_set):
         if sat(clause_set,model):
             return model.flat()
 
+        print("model: " + model.print())
+
         # get a failing clause, if any
         failing_clause = check_falsify(clause_set,model)
         
         # if there's a failing clause and there are no guesses left to reverse in the model, 
         # return UNSAT([0])
-        if failing_clause != None and model.level < 1:
+        if failing_clause != None and model.has_decide() == False:
             return [0]
         
         # if there is a failing clause and there is a guess that can be backtracked on, 
-        # run backtrack
+        # run backtrack. currently just dpll backtrack,
+        #  but conflict/explain/learn/backjump here in CDCL
         if failing_clause != None:
             backtrack_dpll(model)
             continue
@@ -60,9 +63,9 @@ def solver (clause_set):
         
         if prop:
             continue
-
-    
-    
+        
+        model.add_decide(decide_literal(clause_set,model))
+        
 
 
 
@@ -142,6 +145,24 @@ def backtrack_dpll(model):
     
     model.add(-1 * top)
     
+def decide_literal(clause_set,model):
+    """ 
+    Returns the smallest unassigned literal
+    """
+    decide_lit = float("inf")
+    for clause in clause_set:
+        for literal in clause:
+            if model.has(literal) == False and model.has(-1 * literal) == False:
+                if abs(literal) < abs(decide_lit):
+                    decide_lit = literal
+    
+    if decide_lit == float("inf"):
+        print("Cant decide anything...")
+        print(clause_set, model)
+        return 0
+        
+    return decide_lit
+
 
 def decide(clause_set, delta, model, conflict_clause):
     """
