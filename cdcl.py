@@ -1,4 +1,5 @@
 import sys
+from Model import Model
 
 """
 The main file that gives an assignment to a Propositional Boolean Logic formula in a CNF format
@@ -15,8 +16,54 @@ def solver (clause_set):
     represents the formula
     [(A \/ -B \/ C) /\  (B \/ C) /\  B /\ (-A \/ B)]
 
+    Currently working off of slide 30 in https://homepage.divms.uiowa.edu/~tinelli/classes/4980/Spring24/notes/06-dpll-cdcl.pdf
+
+    Returns a satisfying list of assignments if there exists one
+    If the clause set is unsatisfiable, return [0]
     """
-    return "UNSAT"
+    delta = []
+    model = Model()
+    conflict_clause = []
+
+    while True:
+
+        # if the current model satisifies the clause set, return it
+        if sat(clause_set,model):
+            return model.flat()
+
+        # get a failing clause, if any
+        failing_clause = check_falsify(clause_set,model)
+        
+        # if there's a failing clause and there are no guesses left to reverse in the model, 
+        # return UNSAT([0])
+        if failing_clause != None and model.level < 1:
+            return [0]
+        
+        # if there is a failing clause and there is a guess that can be backtracked on, 
+        # run backtrack
+        if failing_clause != None:
+            backtrack_dpll(model)
+            continue
+
+        # run unit propagation as much as possible
+        # TODO: can be made more efficient by moving the loop inside propagate_possible
+        unit_clause = None
+        prop = False
+        while True:
+            unit_clause = propagate_possible(clause_set,model)
+            if unit_clause != 0:
+                # propagate the unit clause
+                model.add(unit_clause)
+                prop = True
+            else:
+                break
+        
+        if prop:
+            continue
+
+    
+    
+
 
 
 """
@@ -25,27 +72,76 @@ def solver (clause_set):
 """
 
 
-def solver_step(clause_set, delta, model, conflict_clause):
-    """
-    decides which rule to apply, returns the modified, clause_set, model, delta and C
-    """
-    if propgate_possible(clause_set):
-        return propogate(clause_set, delta, model, conflict_clause)
-
-    else: return (clause_set, delta, model, conflict_clause)
-
-def propgate_possible(clause_set):
-    """
-    Checks if there's a single literal clause in the clause set
-    """
-    return False
+"""
+RULES
+Are we implementing PURE, FORGET and RESTART ?
+"""
 
 
-def propogate(clause_set, delta, model, conflict_clause):
+def sat(clause_set,model):
     """
-    Applies propogate on the clause set
+    Returns true if all clauses in a clause set is satisfied by the current model 
     """
-    return (clause_set, delta, model, conflict_clause)
+    for clause in clause_set:
+        sat = False
+        for lit in clause:
+            if model.has(lit):
+                sat = True
+                break
+        if sat == False:
+            return False
+    return True
+
+def check_falsify(clause_set,model):
+    """
+    Returns the first clause in a clause set where the model has a negated assignment for every literal in that clause set
+    If none exist, returns None
+    """
+    for clause in clause_set:
+        negated_set = set(list(map(lambda x: x * -1, clause)))
+
+        if negated_set <= model.set():
+            return clause
+        
+    return None
+
+def propagate_possible(clause_set, model):
+    """
+    Returns the smallest literal that's unit in any clause in the clause set
+    If there's none, returns 0.
+    """
+    unit_clause = float("inf")
+    model_set = model.set()
+
+    for clause in clause_set:
+        #negated clause
+        negated = list(map(lambda x: x * -1, clause))
+        negated_set = set(negated)
+
+        for i in range(len(clause)):
+            # literal and negation not in the model, and negation of everything else in the model
+            if (clause[i] not in model_set) and (negated[i] not in model_set) and ((negated_set - set([negated[i]])) <= model_set):
+                unit_clause = min(clause[i],unit_clause)
+
+    # there is no clause that is unit
+    if unit_clause == float("inf"):
+        return 0
+    else:
+        return unit_clause
+
+def backtrack_dpll(model):
+    """
+    DPLL backtrack (just reverses the latest decide)
+    """
+
+    top = model.pop_decide()
+    if top == 0:
+        print("Error: backtracking when you shouldn't be...")
+        print(model.print())
+        return 
+    
+    model.add(-1 * top)
+    
 
 def decide(clause_set, delta, model, conflict_clause):
     """
@@ -53,6 +149,12 @@ def decide(clause_set, delta, model, conflict_clause):
     """
     return (clause_set, delta, model, conflict_clause)
 
+def conflict(clause_set, delta, model, conflict_clause):
+    """
+    Checks if a conflict exists and if it does, adds a conflict clause. 
+    Otherwise just returns the passed parameters
+    """
+    return (clause_set, delta, model, conflict_clause)
 
 def explain(clause_set, delta, model, conflict_clause):
     """
@@ -60,10 +162,14 @@ def explain(clause_set, delta, model, conflict_clause):
     """
     return (clause_set, delta, model, conflict_clause)
 
-
-
-def backjump(clause_set, delta, model, conflict_clause):
+def fail(clause_set, delta, model, conflict_clause):
     """
-    backjumps to an appropriate decision point.
+    checks if a clause set is unsatisfiable
+    """
+    return (clause_set, delta, model, conflict_clause)
+
+def learn(clause_set, delta, model, conflict_clause):
+    """
+    adds clauses from the conflict_clause to the clause_set
     """
     return (clause_set, delta, model, conflict_clause)

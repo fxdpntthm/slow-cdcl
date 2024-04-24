@@ -9,6 +9,7 @@ from pysmt.exceptions import NoSolverAvailableError
 from pysmt.rewritings import conjunctive_partition
 
 from IO import read_input
+from cdcl import solver
 
 import sys
 from os.path import exists
@@ -102,12 +103,20 @@ if __name__ == "__main__":
     skel_map,rev_map = build_skeleton_map(formula)
     # build the skeleton
     skeleton = build_skeleton(formula, skel_map)
+    
+    print("Clause Set: " + str(formula))
+    print("Atoms: " + str(formula.get_atoms()))
+    print("Atom map: " + str(skel_map))
+    print("Boolean skeleton: " + str(skeleton))
+    
+    # pass skeleton to CDCL solver
+    sat_ass = solver(skeleton)
 
-    # print("Clause Set: " + str(formula))
-    # print("Atoms: " + str(formula.get_atoms()))
-    # print("Atom map: " + str(skel_map))
-    # print("Boolean skeleton: " + str(skeleton))
+    print("Satisfying assignment: " + str(sat_ass))
 
+    print("\n")
+
+    
     with Solver(name="z3", logic="QF_LRA", unsat_cores_mode="all") as solver:
         solver.set_option(":produce-models", "true")
         t1 = time.time()
