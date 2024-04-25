@@ -6,7 +6,6 @@ from pysmt.logics import QF_UFLRA, QF_UFIDL, QF_LRA, QF_IDL, QF_LIA
 from pysmt.shortcuts import get_env, GT, Solver, Symbol, And, Or, Not, is_unsat, is_sat, get_unsat_core, get_model
 from pysmt.typing import REAL
 from pysmt.exceptions import NoSolverAvailableError
-from pysmt.rewritings import conjunctive_partition
 
 from IO import read_input
 from cdcl import solve
