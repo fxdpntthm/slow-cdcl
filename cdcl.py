@@ -1,4 +1,5 @@
 import sys
+
 from Model import Model
 from typing import *
 
@@ -6,7 +7,6 @@ from typing import *
 The main file that gives an assignment to a Propositional Boolean Logic formula in a CNF format
 or returns UNSAT
 """
-
 
 def solve (clause_set: list[list[int]]) -> Optional [list[int]]:
     """
@@ -37,13 +37,13 @@ def solve (clause_set: list[list[int]]) -> Optional [list[int]]:
 
         # get a failing clause, if any
         failing_clause = check_falsify(clause_set,model)
-        
-        # if there's a failing clause and there are no guesses left to reverse in the model, 
+
+        # if there's a failing clause and there are no guesses left to reverse in the model,
         # return UNSAT([0])
         if failing_clause != None and model.has_decide() == False:
             return None
-        
-        # if there is a failing clause and there is a guess that can be backtracked on, 
+
+        # if there is a failing clause and there is a guess that can be backtracked on,
         # run backtrack. currently just dpll backtrack,
         #  but conflict/explain/learn/backjump here in CDCL
         if failing_clause != None:
@@ -62,17 +62,17 @@ def solve (clause_set: list[list[int]]) -> Optional [list[int]]:
                 prop = True
             else:
                 break
-        
+
         if prop:
             continue
-        
-        # run decide 
+
+        # run decide
         decide_lit = decide_literal(clause_set,model)
         if decide_lit != 0:
             model.add(decide_lit)
         else:
             print("Nothing to decide...")
-        
+
 
 
 
@@ -84,13 +84,13 @@ def solve (clause_set: list[list[int]]) -> Optional [list[int]]:
 
 """
 RULES
-Are we implementing RESTART? 
+Are we implementing RESTART?
 """
 
 
 def sat(clause_set,model):
     """
-    Returns true if all clauses in a clause set is satisfied by the current model 
+    Returns true if all clauses in a clause set is satisfied by the current model
     """
     for clause in clause_set:
         sat = False
@@ -112,7 +112,7 @@ def check_falsify(clause_set,model):
 
         if negated_set <= model.set():
             return clause
-        
+
     return None
 
 def propagate_possible(clause_set, model):
@@ -148,12 +148,12 @@ def backtrack_dpll(model):
     if top == 0:
         print("Error: backtracking when you shouldn't be...")
         print(model.print())
-        return 
-    
+        return
+
     model.add(-1 * top)
-    
+
 def decide_literal(clause_set,model):
-    """ 
+    """
     Returns the smallest unassigned literal
     """
     decide_lit = float("inf")
@@ -162,12 +162,12 @@ def decide_literal(clause_set,model):
             if not model.has(literal) and not model.has(-1 * literal):
                 if abs(literal) < abs(decide_lit):
                     decide_lit = literal
-    
+
     if decide_lit == float("inf"):
         print("Cant decide anything...")
         print(clause_set, model)
         return 0
-        
+
     return decide_lit
 
 
@@ -179,7 +179,7 @@ def decide(clause_set, delta, model, conflict_clause):
 
 def conflict(clause_set, delta, model, conflict_clause):
     """
-    Checks if a conflict exists and if it does, adds a conflict clause. 
+    Checks if a conflict exists and if it does, adds a conflict clause.
     Otherwise just returns the passed parameters
     """
     return (clause_set, delta, model, conflict_clause)
