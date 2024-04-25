@@ -33,14 +33,15 @@ def solve (clause_set: list[list[int]]) -> Optional [list[int]]:
         if sat(clause_set,model):
             return model.flat()
 
-        #print("model: " + model.print())
 
         # get a failing clause, if any
         failing_clause = check_falsify(clause_set,model)
-
-        # if there's a failing clause and there are no guesses left to reverse in the model,
-        # return UNSAT([0])
+        
+        # if there's a failing clause and there are no guesses left to reverse in the model, 
+        # return UNSAT
         if failing_clause != None and model.has_decide() == False:
+            #print("Failing out...")
+            #print(model.data)
             return None
 
         # if there is a failing clause and there is a guess that can be backtracked on,
@@ -69,7 +70,7 @@ def solve (clause_set: list[list[int]]) -> Optional [list[int]]:
         # run decide
         decide_lit = decide_literal(clause_set,model)
         if decide_lit != 0:
-            model.add(decide_lit)
+            model.add_decide(decide_lit)
         else:
             print("Nothing to decide...")
 
