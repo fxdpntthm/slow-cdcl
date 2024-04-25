@@ -1,5 +1,6 @@
 import sys
 from Model import Model
+from typing import *
 
 """
 The main file that gives an assignment to a Propositional Boolean Logic formula in a CNF format
@@ -7,7 +8,7 @@ or returns UNSAT
 """
 
 
-def solver (clause_set):
+def solve (clause_set: list[list[int]]) -> Optional [list[int]]:
     """
     The solver takes a formula or the clause_set
     of a list of lists. The inner list are the set of literals.
@@ -25,13 +26,14 @@ def solver (clause_set):
     model = Model()
     conflict_clause = []
 
+    # once restart is done, restart instead of while true
     while True:
 
         # if the current model satisifies the clause set, return it
         if sat(clause_set,model):
             return model.flat()
 
-        print("model: " + model.print())
+        #print("model: " + model.print())
 
         # get a failing clause, if any
         failing_clause = check_falsify(clause_set,model)
@@ -39,7 +41,7 @@ def solver (clause_set):
         # if there's a failing clause and there are no guesses left to reverse in the model, 
         # return UNSAT([0])
         if failing_clause != None and model.has_decide() == False:
-            return [0]
+            return None
         
         # if there is a failing clause and there is a guess that can be backtracked on, 
         # run backtrack. currently just dpll backtrack,
@@ -64,7 +66,12 @@ def solver (clause_set):
         if prop:
             continue
         
-        model.add_decide(decide_literal(clause_set,model))
+        # run decide 
+        decide_lit = decide_literal(clause_set,model)
+        if decide_lit != 0:
+            model.add(decide_lit)
+        else:
+            print("Nothing to decide...")
         
 
 
@@ -77,7 +84,7 @@ def solver (clause_set):
 
 """
 RULES
-Are we implementing PURE, FORGET and RESTART ?
+Are we implementing RESTART? 
 """
 
 
@@ -152,7 +159,7 @@ def decide_literal(clause_set,model):
     decide_lit = float("inf")
     for clause in clause_set:
         for literal in clause:
-            if model.has(literal) == False and model.has(-1 * literal) == False:
+            if not model.has(literal) and not model.has(-1 * literal):
                 if abs(literal) < abs(decide_lit):
                     decide_lit = literal
     
@@ -194,3 +201,8 @@ def learn(clause_set, delta, model, conflict_clause):
     adds clauses from the conflict_clause to the clause_set
     """
     return (clause_set, delta, model, conflict_clause)
+
+
+"""
+clause = [0, 1,2,.... -2,-1]
+"""

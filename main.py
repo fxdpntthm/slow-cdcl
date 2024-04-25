@@ -9,7 +9,7 @@ from pysmt.exceptions import NoSolverAvailableError
 from pysmt.rewritings import conjunctive_partition
 
 from IO import read_input
-from cdcl import solver
+from cdcl import solve
 
 import sys
 from os.path import exists
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     print("Boolean skeleton: " + str(skeleton))
     
     # pass skeleton to CDCL solver
-    sat_ass = solver(skeleton)
+    sat_ass = solve(skeleton)
 
     print("Satisfying assignment: " + str(sat_ass))
 
