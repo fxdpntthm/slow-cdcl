@@ -49,19 +49,23 @@ def build_skeleton(formula, atom_map):
     """
     formula_skeleton = []
     for clause in formula.args():
-        # Each clause is either a literal, negated literal, OR atoms
-        clause_skeleton = []
-        if len(clause.args()) == 0:
-            # this is a singleton clause so just append its lookup
-            clause_skeleton.append(atom_map[clause])
-        else:
-            for literal in clause.args():
-                if literal.is_not():
-                    clause_skeleton.append(-1 * atom_map[literal.arg(0)])
-                else: clause_skeleton.append(atom_map[literal])
-        clause_skeleton.sort()
+        clause_skeleton = build_skeleton_clause(clause, atom_map)
         formula_skeleton.append(clause_skeleton)
     return formula_skeleton
+
+def build_skeleton_clause(clause, atom_map):
+    clause_skeleton = []
+    # Each clause is either a literal, negated literal
+    if len(clause.args()) == 0:
+            # this is a singleton clause so just append its lookup
+            clause_skeleton.append(atom_map[clause])
+    else:
+        for literal in clause.args():
+            if literal.is_not():
+                clause_skeleton.append(-1 * atom_map[literal.arg(0)])
+            else: clause_skeleton.append(atom_map[literal])
+        clause_skeleton.sort()
+    return clause_skeleton
 
 def build_formula(skeleton, atom_map):
     """
@@ -102,34 +106,44 @@ if __name__ == "__main__":
     skel_map,rev_map = build_skeleton_map(formula)
     # build the skeleton
     skeleton = build_skeleton(formula, skel_map)
-    
-    print("Clause Set: " + str(formula))
-    print("Atoms: " + str(formula.get_atoms()))
-    print("Atom map: " + str(skel_map))
-    print("Boolean skeleton: " + str(skeleton))
-    
-    # pass skeleton to CDCL solver
-    sat_ass = solve(skeleton)
 
-    print("Satisfying assignment: " + str(sat_ass))
+    # print("Clause Set: " + str(formula))
+    # print("Atoms: " + str(formula.get_atoms()))
+    # print("Atom map: " + str(skel_map))
+    # print("Boolean skeleton: " + str(skeleton))
 
-    print("\n")
+    t1 = time.time()
+    with Solver(name="z3", logic="QF_LRA", unsat_cores_mode="all") as tsolver:
+        while True:
+            # with  SatSolver() as ssolver:
+            tsolver.set_option(":produce-models", "true")
+            print(skeleton)
+            sat_model = solve(skeleton)
 
-    
-    with Solver(name="z3", logic="QF_LRA", unsat_cores_mode="all") as solver:
-        solver.set_option(":produce-models", "true")
-        t1 = time.time()
-        solver.add_assertion(formula)
-        sat = solver.solve()
-        t2 = time.time()
-        if sat:
-            print("sat", t2 - t1)
+            if sat_model is None:
+                t2 = time.time()
+                print("unsat")
+                break
+            # print(f"sat model {sat_model}")
+            # print(f"tsolver formula {And([build_formula([[l]], rev_map) for l in sat_model ])}")
+            tsolver.push()
+            tsolver.add_assertion(And([build_formula([[l]], rev_map) for l in sat_model ]))
+            if tsolver.solve():
+                print("sat")
+                m = tsolver.get_model()
+                t2 = time.time()
+                for v in free_vars:
+                    print(f"{v} := {m.get_value(v)}")
+                break
+            else:
+                ucore = tsolver.get_unsat_core()
+                # blocking_clause = And(list(ucore))
+                # print(f"ucore = {ucore}")
+                blocking_clause = []
+                for c in ucore:
+                    blocking_clause = Or(list(map(lambda x: Not(x), c.args())))
+                    blocking_clause_skeleton = build_skeleton_clause(blocking_clause, skel_map)
+                    skeleton.append(blocking_clause_skeleton)
+                tsolver.pop()
 
-            m = solver.get_model()
-            for v in free_vars:
-                print(f"{v} := {m.get_value(v)}")
-        else:
-            print("unsat", t2 - t1)
-            ucore = solver.get_unsat_core()
-            blocking_clause = And(list(ucore))
-            # print(f"blocking clause = {blocking_clause}")
+    print(t2 - t1)
