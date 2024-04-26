@@ -31,7 +31,7 @@ def solve (clause_set: list[list[int]]) -> Optional [list[int]]:
 
         # if the current model satisifies the clause set, return it
         if sat(clause_set,model):
-            return model.flat()
+            return model.get_data()
 
 
         # get a failing clause, if any
@@ -41,7 +41,7 @@ def solve (clause_set: list[list[int]]) -> Optional [list[int]]:
         # return UNSAT
         if failing_clause != None and model.has_decide() == False:
             #print("Failing out...")
-            #print(model.data)
+            #print(model.get_data())
             return None
 
         # if there is a failing clause and there is a guess that can be backtracked on,

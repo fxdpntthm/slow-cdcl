@@ -119,7 +119,8 @@ if __name__ == "__main__":
             tsolver.set_option(":produce-models", "true")
             print(skeleton)
             sat_model = solve(skeleton)
-
+            print("sat model: " + str(sat_model))
+            
             if sat_model is None:
                 t2 = time.time()
                 print("unsat")

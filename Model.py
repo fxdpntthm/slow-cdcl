@@ -3,25 +3,28 @@ class Model:
     Model class that holds literal assignments in levels, just implemented as a list for now
     """
     def __init__(self):
-        self.data = []
-        self.decides = []
+        self.__data = []
+        self.__decides = []
         
     def add(self, lit):
-        self.data.append(lit)
+        self.__data.append(lit)
+    
+    def add_all(self, lits):
+        self.__data.extend(lits)
 
     def add_decide(self,lit):
-        self.data.append([lit])
-        self.decides.append(len(self.data) - 1)
+        self.__data.append(lit)
+        self.__decides.append(len(self.__data) - 1)
         
-    def flat(self):
-        return list(map(lambda x: x[0] if type(x) == list else x, self.data))
+    def get_data(self):
+        return self.__data
     
     def set(self):
-        return set(self.flat())
+        return set(self.__data)
 
     def has(self, lit):
-        for literal in self.data:
-            if literal == lit or (type(literal) == list and literal[0] == lit):
+        for literal in self.__data:
+            if literal == lit:
                 return True
         return False
     
@@ -29,13 +32,13 @@ class Model:
         if not self.has_decide():
             return 0
 
-        decision = self.decides.pop()
-        val = self.data[decision][0]
-        self.data = self.data[:decision]
+        decision = self.__decides.pop()
+        val = self.__data[decision]
+        self.__data = self.__data[:decision]
         return val
 
     def has_decide(self):
-        return len(self.decides) > 0
+        return len(self.__decides) > 0
 
     def print(self):
-        return str(self.data)
+        return str(self.__data)
