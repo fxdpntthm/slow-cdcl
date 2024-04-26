@@ -18,6 +18,9 @@ class Model:
         
     def get_data(self):
         return self.__data
+
+    def get_decides(self):
+        return self.__decides
     
     def set(self):
         return set(self.__data)

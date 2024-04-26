@@ -52,19 +52,8 @@ def solve (clause_set: list[list[int]]) -> Optional [list[int]]:
             continue
 
         # run unit propagation as much as possible
-        # TODO: can be made more efficient by moving the loop inside propagate_possible
-        unit_clause = None
-        prop = False
-        while True:
-            unit_clause = propagate_possible(clause_set,model)
-            if unit_clause != 0:
-                # propagate the unit clause
-                model.add(unit_clause)
-                prop = True
-            else:
-                break
-
-        if prop:
+        model_changed = propagate_possible(clause_set, model)
+        if model_changed:
             continue
 
         # run decide
@@ -72,7 +61,7 @@ def solve (clause_set: list[list[int]]) -> Optional [list[int]]:
         if decide_lit != 0:
             model.add_decide(decide_lit)
         else:
-            print("Nothing to decide...")
+            break
 
 
 
@@ -116,10 +105,11 @@ def check_falsify(clause_set,model):
 
     return None
 
-def propagate_possible(clause_set, model):
+def propagate_possible_old(clause_set, model):
     """
     Returns the smallest literal that's unit in any clause in the clause set
     If there's none, returns 0.
+    have kept it in case we need to revert it
     """
     unit_clause = float("inf")
     model_set = model.set()
@@ -139,6 +129,44 @@ def propagate_possible(clause_set, model):
         return 0
     else:
         return unit_clause
+
+def propagate_possible(clause_set, model):
+    """
+    Runs unit propagation as much as possible and returns whether the model was modified
+    """
+    
+    model_set = model.set()
+    # a clause set where each clause is the negation of a clause of the passed-in clause set
+    negated_clauses = list(map(lambda clause: list(map(lambda x: x * -1, clause)), clause_set))
+    # sets for each negated clause set
+    negated_sets = list(map(lambda clause: set(clause), negated_clauses))
+    
+    model_change = False
+
+    while True:
+        unit_clause = float("inf")
+    
+        for i in range(len(clause_set)):
+            clause = clause_set[i]
+            #negated clause
+            negated = negated_clauses[i]
+            negated_set = negated_sets[i]
+            
+            for j in range(len(clause)):
+                # literal and negation not in the model, and negation of everything else in the model
+                if (clause[j] not in model_set) and (negated[j] not in model_set) and ((negated_set - set([negated[j]])) <= model_set):
+                    unit_clause = min(clause[j],unit_clause)
+        
+        # if there is a unit literal, add it to the model and model set
+        if unit_clause != float("inf"):
+            model.add(unit_clause)
+            model_set.add(unit_clause)
+            model_change = True
+        else:
+            break
+
+    return model_change
+
 
 def backtrack_dpll(model):
     """
@@ -166,7 +194,6 @@ def decide_literal(clause_set,model):
 
     if decide_lit == float("inf"):
         print("Cant decide anything...")
-        print(clause_set, model)
         return 0
 
     return decide_lit
