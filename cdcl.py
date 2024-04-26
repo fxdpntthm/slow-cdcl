@@ -36,8 +36,8 @@ def solve (clause_set: list[list[int]]) -> Optional [list[int]]:
 
         # get a failing clause, if any
         failing_clause = check_falsify(clause_set,model)
-        
-        # if there's a failing clause and there are no guesses left to reverse in the model, 
+
+        # if there's a failing clause and there are no guesses left to reverse in the model,
         # return UNSAT
         if failing_clause != None and model.has_decide() == False:
             #print("Failing out...")
@@ -78,7 +78,7 @@ Are we implementing RESTART?
 """
 
 
-def sat(clause_set,model):
+def sat(clause_set : list[list[int]], model: Model) -> bool:
     """
     Returns true if all clauses in a clause set is satisfied by the current model
     """
@@ -88,13 +88,12 @@ def sat(clause_set,model):
             if model.has(lit):
                 sat = True
                 break
-        if sat == False:
-            return False
-    return True
+    return sat
 
-def check_falsify(clause_set,model):
+def check_falsify(clause_set: list[list[int]], model: Model) -> Optional[list[int]]:
     """
-    Returns the first clause in a clause set where the model has a negated assignment for every literal in that clause set
+    Returns the first clause in a clause set where
+    the model has a negated assignment for every literal in that clause set
     If none exist, returns None
     """
     for clause in clause_set:
@@ -105,58 +104,36 @@ def check_falsify(clause_set,model):
 
     return None
 
-def propagate_possible_old(clause_set, model):
-    """
-    Returns the smallest literal that's unit in any clause in the clause set
-    If there's none, returns 0.
-    have kept it in case we need to revert it
-    """
-    unit_clause = float("inf")
-    model_set = model.set()
-
-    for clause in clause_set:
-        #negated clause
-        negated = list(map(lambda x: x * -1, clause))
-        negated_set = set(negated)
-
-        for i in range(len(clause)):
-            # literal and negation not in the model, and negation of everything else in the model
-            if (clause[i] not in model_set) and (negated[i] not in model_set) and ((negated_set - set([negated[i]])) <= model_set):
-                unit_clause = min(clause[i],unit_clause)
-
-    # there is no clause that is unit
-    if unit_clause == float("inf"):
-        return 0
-    else:
-        return unit_clause
-
-def propagate_possible(clause_set, model):
+def propagate_possible(clause_set: list[list[int]], model: Model) -> bool:
     """
     Runs unit propagation as much as possible and returns whether the model was modified
+    The model parameter is modified by the function
     """
-    
+
     model_set = model.set()
     # a clause set where each clause is the negation of a clause of the passed-in clause set
     negated_clauses = list(map(lambda clause: list(map(lambda x: x * -1, clause)), clause_set))
     # sets for each negated clause set
     negated_sets = list(map(lambda clause: set(clause), negated_clauses))
-    
+
     model_change = False
 
     while True:
         unit_clause = float("inf")
-    
+
         for i in range(len(clause_set)):
             clause = clause_set[i]
             #negated clause
             negated = negated_clauses[i]
             negated_set = negated_sets[i]
-            
+
             for j in range(len(clause)):
                 # literal and negation not in the model, and negation of everything else in the model
-                if (clause[j] not in model_set) and (negated[j] not in model_set) and ((negated_set - set([negated[j]])) <= model_set):
+                if ((clause[j] not in model_set)
+                    and (negated[j] not in model_set)
+                    and ((negated_set - set([negated[j]])) <= model_set)):
                     unit_clause = min(clause[j],unit_clause)
-        
+
         # if there is a unit literal, add it to the model and model set
         if unit_clause != float("inf"):
             model.add(unit_clause)
