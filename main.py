@@ -13,6 +13,13 @@ from cdcl import solve
 import sys
 from os.path import exists
 import time
+from Model import Model
+from Clause import Clause
+
+import cProfile, pstats, io
+from pstats import SortKey
+
+pr = cProfile.Profile()
 
 
 # SOLVER_NAME = "z3" # Note: The API version is called 'msat'
@@ -80,6 +87,7 @@ def build_formula(skeleton, atom_map):
                {1 -> x + y >= 0, 2 -> B, 3 -> D, 4 -> y <=0 , 5 -> C}
 
     returns (!(x + y >= 0) \/ B)  /\  ! D  /\   (y <= 0 \/ C)
+
     """
     clauses = []
     for c in skeleton:
@@ -94,65 +102,84 @@ def build_formula(skeleton, atom_map):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        sys.exit("Error: No input file passed.")
-    fpath = sys.argv[1]
-    if not exists(fpath):
-        sys.exit(f"Error: {fpath} does not exists.")
+    with cProfile.Profile() as pr:
 
-    # Build the FNode formula
-    formula, free_vars = read_input(fpath)
-    # build the skeleton map
-    skel_map,rev_map = build_skeleton_map(formula)
-    # build the skeleton
-    skeleton = build_skeleton(formula, skel_map)
+        if len(sys.argv) < 2:
+            sys.exit("Error: No input file passed.")
+        fpath = sys.argv[1]
+        if not exists(fpath):
+            sys.exit(f"Error: {fpath} does not exists.")
 
-    """
-    print("Clause Set: " + str(formula))
-    print("Atoms: " + str(formula.get_atoms()))
-    print("Atom map: " + str(skel_map))
-    print("Boolean skeleton: " + str(skeleton))
-    """
-    
-    t1 = time.time()
-    with Solver(name="z3", logic="QF_LRA", unsat_cores_mode="all") as tsolver:
-        while True:
-            # with  SatSolver() as ssolver:
-            tsolver.set_option(":produce-models", "true")
-            # print(skeleton)
-            # TODO: skeleton should be a list of Clause objects
-            sat_model = solve(skeleton, len(skel_map))
-            #print("sat model: " + str(sat_model))
+        # Build the FNode formula
+        formula, free_vars = read_input(fpath)
+        # build the skeleton map
+        skel_map,rev_map = build_skeleton_map(formula)
+        # build the skeleton
+        skeleton = build_skeleton(formula, skel_map)
+        # how many variables do we have?
+        problem_size = len(skel_map)
 
-            if sat_model is None:
-                t2 = time.time()
-                print("unsat")
-                break
-            # print(f"sat model {sat_model}")
-            # print(f"tsolver formula {And([build_formula([[l]], rev_map) for l in sat_model ])}")
-            tsolver.push()
-            tsolver.add_assertion(And([build_formula([[l]], rev_map) for l in sat_model ]))
-            if tsolver.solve():
-                print("sat")
-                m = tsolver.get_model()
-                t2 = time.time()
-                for v in free_vars:
-                    print(f"{v} := {m.get_value(v)}")
-                break
-            else:
-                ucore = tsolver.get_unsat_core()
-                # blocking_clause = And(list(ucore))
-                print(f"ucore = {ucore}")
-                blocking_clause = []
-                for c in ucore:
-                    blocking_clause = Or(list(map(lambda x: Not(x), c.args())))
-                    blocking_clause_skeleton = build_skeleton_clause(blocking_clause, skel_map)
-                    skeleton.append(blocking_clause_skeleton)
+        clause_set = []
+        # make a list of Clause objects out of a list of ints
+        for clause in skeleton:
+            c = Clause(problem_size)
+            for lit in clause:
+                c.add(lit)
+            #print(f"list: {clause}, Clause: {c.data}")
+            clause_set.append(c)
+
+
+
+        # print("Clause Set: " + str(formula))
+        # print("Atoms: " + str(formula.get_atoms()))
+        # print("Atom map: " + str(skel_map))
+        # print("Boolean skeleton: " + str(skeleton))
+
+
+        t1 = time.time()
+        with Solver(name="z3", logic="QF_LRA", unsat_cores_mode="all") as tsolver:
+            while True:
+                # with  SatSolver() as ssolver:
+                tsolver.set_option(":produce-models", "true")
+                print(f"Clause set: {clause_set[-1]}")
+                # TODO: skeleton should be a list of Clause objects
+                sat_model = solve(clause_set, problem_size)
+                #print("sat model: " + str(sat_model))
+
+                if sat_model is None:
+                    t2 = time.time()
+                    print("unsat")
+                    break
+                # print(f"sat model {sat_model}")
+                # print(f"tsolver formula {And([build_formula([[l]], rev_map) for l in sat_model ])}")
+                tsolver.push()
+                tsolver.add_assertion(And([build_formula([[l]], rev_map) for l in sat_model ]))
+                if tsolver.solve():
+                    print("sat")
+                    m = tsolver.get_model()
+                    t2 = time.time()
+                    for v in free_vars:
+                        print(f"{v} := {m.get_value(v)}")
+                        break
+                else:
+                    ucore = tsolver.get_unsat_core()
+                    # blocking_clause = And(list(ucore))
+                    print(f"ucore = {ucore}")
+                    blocking_clause = []
+                    for c in ucore:
+                        blocking_clause = Or(list(map(lambda x: Not(x), c.args())))
+                        blocking_clause_skeleton = build_skeleton_clause(blocking_clause, skel_map)
+                        skeleton.append(blocking_clause_skeleton)
 
                 #blocking_clause_skeleton.sort()
-                
+                        blocking_clause = Clause(problem_size)
+                        for lit in blocking_clause_skeleton:
+                            blocking_clause.add(lit)
+                        clause_set.append(blocking_clause)
                 #print(f"blocking clause: {len(blocking_clause_skeleton)} {blocking_clause_skeleton}")
-                
-                tsolver.pop()
-
-    print(t2 - t1)
+                        tsolver.pop()
+        sortby = SortKey.CUMULATIVE
+        with open("perf-stats.txt", "w", encoding="utf-8") as s:
+            ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+            ps.print_stats()
+        print(t2 - t1)
