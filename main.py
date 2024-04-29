@@ -107,18 +107,20 @@ if __name__ == "__main__":
     # build the skeleton
     skeleton = build_skeleton(formula, skel_map)
 
-    # print("Clause Set: " + str(formula))
-    # print("Atoms: " + str(formula.get_atoms()))
-    # print("Atom map: " + str(skel_map))
-    # print("Boolean skeleton: " + str(skeleton))
-
+    """
+    print("Clause Set: " + str(formula))
+    print("Atoms: " + str(formula.get_atoms()))
+    print("Atom map: " + str(skel_map))
+    print("Boolean skeleton: " + str(skeleton))
+    """
+    
     t1 = time.time()
     with Solver(name="z3", logic="QF_LRA", unsat_cores_mode="all") as tsolver:
         while True:
             # with  SatSolver() as ssolver:
             tsolver.set_option(":produce-models", "true")
             # print(skeleton)
-            sat_model = solve(skeleton)
+            sat_model = solve(skeleton, len(skel_map))
             # print("sat model: " + str(sat_model))
 
             if sat_model is None:
@@ -145,6 +147,11 @@ if __name__ == "__main__":
                     blocking_clause = Or(list(map(lambda x: Not(x), c.args())))
                     blocking_clause_skeleton = build_skeleton_clause(blocking_clause, skel_map)
                     skeleton.append(blocking_clause_skeleton)
+
+                blocking_clause_skeleton.sort()
+                
+                #print(f"blocking clause: {len(blocking_clause_skeleton)} {blocking_clause_skeleton}")
+                
                 tsolver.pop()
 
     print(t2 - t1)

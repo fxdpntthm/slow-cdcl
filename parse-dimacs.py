@@ -15,6 +15,7 @@ def parse_dimacs_cnf(content: str):
     parse the DIMACS cnf file format into corresponding Formula.
     """
     clauses = [[]]
+    literals = 0
     for line in content.splitlines():
         tokens = line.split()
         if len(tokens) != 0 and tokens[0] not in ("p", "c"):
@@ -24,11 +25,12 @@ def parse_dimacs_cnf(content: str):
                     clauses.append([])
                 else:
                     clauses[-1].append(lit)
+                    literals = max(literals,lit)
 
     if len(clauses[-1]) == 0:
         clauses.pop()
 
-    return clauses
+    return (clauses,literals)
 
 if len(sys.argv) < 2:
     print("No file given")
@@ -38,7 +40,7 @@ fname = sys.argv[1]
 
 content = str(open(fname,"r").read())
 
-clause_set = parse_dimacs_cnf(content)
+clause_set,literals = parse_dimacs_cnf(content)
 print(clause_set)
 print()
-print(solve(clause_set))
+print(solve(clause_set,literals))

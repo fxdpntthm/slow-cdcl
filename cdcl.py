@@ -1,6 +1,7 @@
 import sys
 
 from Model import Model
+from Clause import Clause
 from typing import *
 
 """
@@ -8,7 +9,7 @@ The main file that gives an assignment to a Propositional Boolean Logic formula 
 or returns UNSAT
 """
 
-def solve (clause_set: list[list[int]]) -> Optional [list[int]]:
+def solve (clauses: list[list[int]], literals: int) -> Optional [list[int]]:
     """
     The solver takes a formula or the clause_set
     of a list of lists. The inner list are the set of literals.
@@ -23,15 +24,38 @@ def solve (clause_set: list[list[int]]) -> Optional [list[int]]:
     If the clause set is unsatisfiable, return [0]
     """
     delta = []
-    model = Model()
+    model = Model(literals)
     conflict_clause = []
+
+    # make a list of Clause objects out of a list of ints
+    clause_set = []
+    for clause in clauses:
+        c = Clause(literals)
+        for lit in clause:
+            c.add(lit)
+        
+        #print(f"list: {clause}, Clause: {c.data}")
+        clause_set.append(c)
 
     # once restart is done, restart instead of while true
     while True:
 
         # if the current model satisifies the clause set, return it
         if sat(clause_set,model):
-            return model.get_data()
+            sat_model = []
+            i = 1
+            while i <= literals:
+                if model.has(i):
+                    sat_model.append(i)
+                i += 1
+            
+            i = -1
+            while i >= -1 * literals:
+                if model.has(i):
+                    sat_model.append(i)
+                i -= 1
+
+            return sat_model
 
 
         # get a failing clause, if any
@@ -40,8 +64,6 @@ def solve (clause_set: list[list[int]]) -> Optional [list[int]]:
         # if there's a failing clause and there are no guesses left to reverse in the model,
         # return UNSAT
         if failing_clause != None and model.has_decide() == False:
-            #print("Failing out...")
-            #print(model.get_data())
             return None
 
         # if there is a failing clause and there is a guess that can be backtracked on,
@@ -78,66 +100,71 @@ Are we implementing RESTART?
 """
 
 
-def sat(clause_set : list[list[int]], model: Model) -> bool:
+def sat(clause_set : list[Clause], model: Model) -> bool:
     """
-    Returns true if all clauses in a clause set is satisfied by the current model
+    Returns true if all clauses in a clause set are satisfied by the current model
     """
+    
     for clause in clause_set:
         sat = False
-        for lit in clause:
-            if model.has(lit):
+        for i in clause.to_list():
+            if model.has(i):
                 sat = True
                 break
-    return sat
+        
+        if not sat:
+            return False
+    
+    return True
 
-def check_falsify(clause_set: list[list[int]], model: Model) -> Optional[list[int]]:
+def check_falsify(clause_set: list[Clause], model: Model) -> Optional[Clause]:
     """
     Returns the first clause in a clause set where
     the model has a negated assignment for every literal in that clause set
     If none exist, returns None
     """
     for clause in clause_set:
-        negated_set = set(list(map(lambda x: x * -1, clause)))
 
-        if negated_set <= model.set():
+        negated = clause.negated()
+
+        if model.contains_clause(negated):
             return clause
 
     return None
 
-def propagate_possible(clause_set: list[list[int]], model: Model) -> bool:
+def propagate_possible(clause_set: list[Clause], model: Model) -> bool:
     """
     Runs unit propagation as much as possible and returns whether the model was modified
     The model parameter is modified by the function
     """
 
-    model_set = model.set()
     # a clause set where each clause is the negation of a clause of the passed-in clause set
-    negated_clauses = list(map(lambda clause: list(map(lambda x: x * -1, clause)), clause_set))
-    # sets for each negated clause set
-    negated_sets = list(map(lambda clause: set(clause), negated_clauses))
-
+    negated_clauses = list(map(lambda x: x.negated(), clause_set))
+    
     model_change = False
 
     while True:
         unit_clause = float("inf")
 
         for i in range(len(clause_set)):
-            clause = clause_set[i]
+            clause = clause_set[i].to_list()
             #negated clause
-            negated = negated_clauses[i]
-            negated_set = negated_sets[i]
+            negated = negated_clauses[i].to_list()
+            
 
             for j in range(len(clause)):
-                # literal and negation not in the model, and negation of everything else in the model
-                if ((clause[j] not in model_set)
-                    and (negated[j] not in model_set)
-                    and ((negated_set - set([negated[j]])) <= model_set)):
+                negation_minus_one = clause_set[i].negated_minus_one(clause[j])
+
+                # literal and its negation not in the model, and negation of everything else in the model
+                if (not (model.has(clause[j]))
+                    and (not model.has(negated[j]))
+                    and (model.contains_clause(negation_minus_one))):
+                    
                     unit_clause = min(clause[j],unit_clause)
 
-        # if there is a unit literal, add it to the model and model set
+        # if there is a unit literal, add it to the model
         if unit_clause != float("inf"):
             model.add(unit_clause)
-            model_set.add(unit_clause)
             model_change = True
         else:
             break
@@ -154,7 +181,7 @@ def backtrack_dpll(model):
     if top == 0:
         print("Error: backtracking when you shouldn't be...")
         print(model.print())
-        return
+        sys.exit()
 
     model.add(-1 * top)
 
@@ -164,7 +191,7 @@ def decide_literal(clause_set,model):
     """
     decide_lit = float("inf")
     for clause in clause_set:
-        for literal in clause:
+        for literal in clause.to_list():
             if not model.has(literal) and not model.has(-1 * literal):
                 if abs(literal) < abs(decide_lit):
                     decide_lit = literal

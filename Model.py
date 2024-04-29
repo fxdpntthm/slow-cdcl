@@ -1,47 +1,82 @@
+from typing import *
+import numpy as np
+from Clause import Clause
+
 class Model:
     """ 
-    Model class that holds literal assignments in levels, just implemented as a list for now
+    Model class that holds literal assignments in levels
     """
-    def __init__(self):
-        self.__data = []
-        self.__decides = []
+    def __init__(self, literals: int):
+        self.data = [np.zeros(2 * literals + 1, dtype="int8")]
+        self.size = literals
+        self.decides = []     # keeping this because its required for DPLL backtrack
         
-    def add(self, lit):
-        self.__data.append(lit)
+    def consistent(self, lit: int) -> bool:
+        return self.data[-1][-1 * lit] == 0
     
-    def add_all(self, lits):
-        self.__data.extend(lits)
+    def out_of_range(self, lit: int) -> bool:
+        return abs(lit) == 0 or abs(lit) > (len(self.data[-1]) - 1)/2
 
-    def add_decide(self,lit):
-        self.__data.append(lit)
-        self.__decides.append(len(self.__data) - 1)
+    def add(self, lit: int):
+        if not self.consistent(lit):
+            print(f"Adding {lit} to {self.data[-1]} will make it inconsistent")
         
-    def get_data(self):
-        return self.__data
+        if self.out_of_range(lit):
+            print(f"{lit} out of range of model {self.data[-1]}")
+            return
 
-    def get_decides(self):
-        return self.__decides
+        self.data[-1][lit] = 1
     
-    def set(self):
-        return set(self.__data)
+    def add_decide(self, lit: int):
+        self.data.append(np.copy(self.data[-1])) 
+        self.decides.append(lit)
+        
+        self.add(lit)
 
-    def has(self, lit):
-        for literal in self.__data:
-            if literal == lit:
-                return True
-        return False
+        
+    def get_data(self) -> np.ndarray:
+        return self.data
     
-    def pop_decide(self):
+    def contains_clause(self, cl: Clause) -> bool:
+        return np.array_equal((cl.data | self.data[-1]).astype("int8"), self.data[-1])
+
+    def has(self, lit: int) -> bool:
+        if self.out_of_range(lit):
+            print(f"{lit} out of range of model {self.data[-1]}")
+            return False
+        
+        return self.data[-1][lit] == 1
+
+    
+    def pop_decide(self) -> int:
         if not self.has_decide():
             return 0
 
-        decision = self.__decides.pop()
-        val = self.__data[decision]
-        self.__data = self.__data[:decision]
-        return val
+        decision = self.decides.pop()
+        self.data.pop()
+        return decision
 
-    def has_decide(self):
-        return len(self.__decides) > 0
+    def has_decide(self) -> bool:
+        return len(self.decides) > 0
 
     def print(self):
-        return str(self.__data)
+        return str(self.data)
+
+    def to_list(self) -> list[int]:
+        # just returns the model as a list of literals ([1,2,-3...])
+        # could be replaced by an iterator later...
+
+        cl = []
+        i = 1
+        while i <= self.size:
+            if self.data[-1][i] == 1:
+                cl.append(i)
+            i += 1
+        
+        i = -1
+        while i >= -1 * self.size:
+            if self.data[-1][i] == 1:
+                cl.append(i)
+            i -= 1
+
+        return cl
