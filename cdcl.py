@@ -92,13 +92,7 @@ def sat(clause_set : list[Clause], model: Model) -> bool:
     """
     
     for clause in clause_set:
-        sat = False
-        for i in clause.to_list():
-            if model.has(i):
-                sat = True
-                break
-        
-        if not sat:
+        if not model.satisfies_clause(clause):
             return False
     
     return True
@@ -110,15 +104,12 @@ def check_falsify(clause_set: list[Clause], model: Model) -> Optional[Clause]:
     If none exist, returns None
     """
     for clause in clause_set:
-
-        negated = clause.negated()
-
-        if model.contains_clause(negated):
+        if model.falsifies_clause(clause):
             return clause
 
     return None
 
-def propagate_possible(clause_set: list[Clause], model: Model) -> bool:
+def propagate_possible_old(clause_set: list[Clause], model: Model) -> bool:
     """
     Runs unit propagation as much as possible and returns whether the model was modified
     The model parameter is modified by the function
@@ -158,10 +149,38 @@ def propagate_possible(clause_set: list[Clause], model: Model) -> bool:
 
     return model_change
 
+def propagate_possible(clause_set: list[Clause], model: Model) -> bool:
+    """
+    Runs unit propagation as much as possible and returns whether the model was modified
+    The model parameter is modified by the function
+    """
 
-def backtrack_dpll(model):
+    model_change = False
+
+    while True:
+        unit_literal = None
+
+        for clause in clause_set:
+            (makes_unit, literal) = model.makes_unit(clause)
+            
+            if makes_unit:
+                unit_literal = literal
+                break
+
+        # if there is a unit literal, add it to the model
+        if unit_literal != None:
+            model.add(unit_literal)
+            model_change = True
+        else:
+            break
+
+    return model_change
+
+
+def backtrack_dpll(model: Model):
     """
     DPLL backtrack (just reverses the latest decide)
+    The model parameter is modified by this function
     """
 
     top = model.pop_decide()
@@ -172,16 +191,20 @@ def backtrack_dpll(model):
 
     model.add(-1 * top)
 
-def decide_literal(clause_set,model):
+def decide_literal(clause_set: List[Clause], model: Model) -> int:
     """
-    Returns the smallest unassigned literal
+    Returns the first unassigned literal
     """
     decide_lit = None
     for clause in clause_set:
-        for literal in clause.to_list():
-            if not model.has(literal) and not model.has(-1 * literal):
-                decide_lit = literal
-                break
+        i = 1
+        while i <= clause.size:
+            if clause.data[i] == 1 or clause.data[-1 * i] == 1:
+                if not model.has(i) and not model.has(-1 * i):
+                    decide_lit = i
+                    break
+            
+            i += 1
 
     if decide_lit == None:
         print("Cant decide anything...")

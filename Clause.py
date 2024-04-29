@@ -60,8 +60,12 @@ class Clause:
         Returns a negated clause object (ie. every literal in the clause is negated) 
         """
         negated = Clause(self.size)
-        for i in self.to_list():
-            negated.add(-1 * i)
+        negated.data = np.copy(self.data)
+
+        i = 1
+        while i <= self.size:
+            negated.data[i], negated.data[-1*i] = negated.data[-1*i], negated.data[i]
+            i += 1
         
         return negated
 

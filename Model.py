@@ -87,6 +87,84 @@ class Model:
         """
         return len(self.decides) > 0
 
+    def satisfies_clause(self, cl: Clause) -> bool:
+        """
+        Returns true if the model satisfies the clause 
+        (ie. if there is a literal that is in the clause and the model) 
+        """
+        i = 1
+        while i <= self.size:
+            if  ((cl.data[i] == 1 and self.data[-1][i] == 1)
+                or (cl.data[-1 * i] == 1 and self.data[-1][-1 * i] == 1)):
+                return True
+            i += 1
+        
+        return False
+
+    def makes_unit(self, cl: Clause) -> (bool, Optional[int]):
+        """
+        Returns whether a clause is a unit clause
+        If it is a unit clause, returns the unit literal
+        """ 
+        
+        falsifying = []
+        unresolved = []
+
+        i = 1
+        while i <= self.size:
+            if cl.data[i] == 0 and cl.data[-1*i] == 0:
+                i+=1
+                continue
+
+            # i think this can be a scenario, so just print something to handle that 
+            if cl.data[i] == 1 and cl.data[-1*i] == -1:
+                print(f"Clause {cl.data.to_list()} has both literal and negation")
+                
+            if cl.data[i] == 1:
+                if self.has(i):
+                    return (False, None)
+                elif self.has(-1*i):
+                    falsifying.append(i)
+                else:
+                    unresolved.append(i)
+            
+            if cl.data[-1*i] == 1:
+                if self.has(-1*i):
+                    return (False, None)
+                elif self.has(i):
+                    falsifying.append(-1*i)
+                else:
+                    unresolved.append(-1*i)
+        
+            i+= 1
+            
+        if len(unresolved) == 1 and (len(falsifying) == self.size - 1):
+            return (True,unresolved[0])
+        else:
+            return (False,None)
+
+
+    def falsifies_clause(self, cl: Clause) -> bool:
+        """
+        Returns true if the model falsifies the clause 
+        (ie. model has a negation for every literal in the clause) 
+        """
+        i = 1
+        while i <= self.size:
+            if (not self.has(i)) and (not self.has(-1*i)):
+                return False
+
+            if cl.data[i] == 1 and self.has(i):
+                return False
+            
+            if cl.data[-1*i] == 1 and self.has(-1*i):
+                return False
+                
+            i += 1
+
+        return True
+                
+
     def print(self):
         return str(self.data)
 
@@ -100,12 +178,9 @@ class Model:
         while i <= self.size:
             if self.data[-1][i] == 1:
                 cl.append(i)
+            if self.data[-1][-1*i] == 1:
+                cl.append(-1*i)
+            
             i += 1
         
-        i = -1
-        while i >= -1 * self.size:
-            if self.data[-1][i] == 1:
-                cl.append(i)
-            i -= 1
-
         return cl
