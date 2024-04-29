@@ -141,7 +141,7 @@ if __name__ == "__main__":
             while True:
                 # with  SatSolver() as ssolver:
                 tsolver.set_option(":produce-models", "true")
-                print(f"Clause set: {clause_set[-1]}")
+                print(f"Clause set: {clause_set.__str__()}")
                 # TODO: skeleton should be a list of Clause objects
                 sat_model = solve(clause_set, problem_size)
                 #print("sat model: " + str(sat_model))
@@ -160,11 +160,10 @@ if __name__ == "__main__":
                     t2 = time.time()
                     for v in free_vars:
                         print(f"{v} := {m.get_value(v)}")
-                        break
+                    break
                 else:
                     ucore = tsolver.get_unsat_core()
                     # blocking_clause = And(list(ucore))
-                    print(f"ucore = {ucore}")
                     blocking_clause = []
                     for c in ucore:
                         blocking_clause = Or(list(map(lambda x: Not(x), c.args())))
@@ -176,6 +175,7 @@ if __name__ == "__main__":
                         for lit in blocking_clause_skeleton:
                             blocking_clause.add(lit)
                         clause_set.append(blocking_clause)
+                        print(f"{ucore} {blocking_clause}")
                 #print(f"blocking clause: {len(blocking_clause_skeleton)} {blocking_clause_skeleton}")
                         tsolver.pop()
         sortby = SortKey.CUMULATIVE

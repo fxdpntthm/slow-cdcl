@@ -10,6 +10,12 @@ class Clause:
         self.data = np.zeros(2 * literals + 1, dtype="int8")
         self.size = literals
 
+    def __str__(self):
+        return self.data.__str__()
+
+    def __repr__(self):
+        return self.__str__()
+
     def consistent(self, lit: int) -> bool:
         """
         Returns false if a negation of a literal (that is to be added) is true
@@ -96,6 +102,3 @@ class Clause:
             i -= 1
 
         return cl
-
-    def __str__(self):
-        return self.data.__str__()

@@ -124,46 +124,40 @@ class Model:
         """
         Returns whether a clause is a unit clause
         If it is a unit clause, returns the unit literal
+        Assmumes clause is consistent
+        i.e. forall i clause.data[i] and clause.data[-i] are never set to one at the same time
         """
 
-        falsifying = []
-        unresolved = []
+        # falsifying = False
+        unresolved = None
+
+        # obvious shortcut case
+        if cl.size == 1:
+            return (True, cl.data[1])
 
         i = 1
         while i <= self.size:
-            if cl.data[i] == 0 and cl.data[-1*i] == 0:
+            while cl.data[i] == 0 and cl.data[-1*i] == 0 and i <= self.size:
                 i+=1
-                continue
-
-            # i think this can be a scenario, so just print something to handle that
-            if cl.data[i] == 1 and cl.data[-1*i] == -1:
-                print(f"Clause {cl.data.to_list()} has both literal and negation")
 
             if cl.data[i] == 1:
-                if self.has(i):
+                if self.has(i): # this clause is already satisfied so skip
                     return (False, None)
-                elif self.has(-1*i):
-                    falsifying.append(i)
                 else:
-                    unresolved.append(i)
+                    if unresolved == 0: unresolved = i
+                    else: return (False, None) # the clause is unresolved
 
             if cl.data[-1*i] == 1:
-                if self.has(-1*i):
+                if self.has(-1*i): # this clause is already satisfied so skip
                     return (False, None)
-                elif self.has(i):
-                    falsifying.append(-1*i)
                 else:
-                    unresolved.append(-1*i)
+                    if unresolved == 0: unresolved = i
+                    else: return (False, None) # the clause is unresolved
+            i += 1
 
-            if len(unresolved) > 1:
-                return (False,None)
-
-            i+= 1
-
-        if len(unresolved) == 1 and (len(falsifying) == self.size - 1):
-            return (True,unresolved[0])
-        else:
-            return (False,None)
+        # at this point,  unresolved is non 0 value
+        assert unresolved != 0
+        return (True,unresolved)
 
 
     def falsifies_clause(self, cl: Clause) -> bool:
