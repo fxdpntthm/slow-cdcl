@@ -120,8 +120,9 @@ if __name__ == "__main__":
             # with  SatSolver() as ssolver:
             tsolver.set_option(":produce-models", "true")
             # print(skeleton)
+            # TODO: skeleton should be a list of Clause objects
             sat_model = solve(skeleton, len(skel_map))
-            print("sat model: " + str(sat_model))
+            #print("sat model: " + str(sat_model))
 
             if sat_model is None:
                 t2 = time.time()
@@ -141,7 +142,7 @@ if __name__ == "__main__":
             else:
                 ucore = tsolver.get_unsat_core()
                 # blocking_clause = And(list(ucore))
-                # print(f"ucore = {ucore}")
+                print(f"ucore = {ucore}")
                 blocking_clause = []
                 for c in ucore:
                     blocking_clause = Or(list(map(lambda x: Not(x), c.args())))

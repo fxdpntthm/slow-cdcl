@@ -72,7 +72,10 @@ class Model:
     
     def pop_decide(self) -> int:
         """
-        Pops the latest level in the model, and returns the literal that was decided at that level
+        Pops the latest level in the model, 
+        and returns the literal that was decided
+        at that level
+        TODO: nth level pop
         """
         if not self.has_decide():
             return 0
@@ -80,6 +83,22 @@ class Model:
         decision = self.decides.pop()
         self.data.pop()
         return decision
+
+    def pop_n(self, level: int, negating_literal: int):
+        
+        self.data = self.data[:level + 1]
+        self.decides = self.decides[:level + 1]
+            
+        if len(self.data) == 0:
+            self.data = [np.zeros(2 * self.size + 1, dtype="int8")]
+        
+        print(self.data, level, negating_literal)
+        assert self.data[-1][negating_literal] == 1
+        
+        # flip the literal
+        self.data[-1][negating_literal] = 0
+        self.data[-1][-1 * negating_literal] = 1
+        print(f"Model after pop_n: {self.data}")
 
     def has_decide(self) -> bool:
         """ 
@@ -135,7 +154,10 @@ class Model:
                     falsifying.append(-1*i)
                 else:
                     unresolved.append(-1*i)
-        
+
+            if len(unresolved) > 1:
+                return (False,None)
+
             i+= 1
             
         if len(unresolved) == 1 and (len(falsifying) == self.size - 1):
@@ -148,6 +170,7 @@ class Model:
         """
         Returns true if the model falsifies the clause 
         (ie. model has a negation for every literal in the clause) 
+        TODO: Find a bitwise operator to do this
         """
         i = 1
         while i <= self.size:
@@ -164,6 +187,18 @@ class Model:
 
         return True
                 
+    def compute_level(self, cl: Clause) -> (int,int):
+        """ 
+        For a given model, computes the level for backjump
+        """
+        i = 0
+        while i < len(self.data):
+            for j in cl.to_list():
+                if self.data[i][j] == 1:
+                    return (i,j)
+            i += 1
+
+
 
     def print(self):
         return str(self.data)

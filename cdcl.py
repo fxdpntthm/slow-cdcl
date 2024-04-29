@@ -3,6 +3,7 @@ import sys
 from Model import Model
 from Clause import Clause
 from typing import *
+import numpy as np
 
 """
 The main file that gives an assignment to a Propositional Boolean Logic formula in a CNF format
@@ -23,9 +24,9 @@ def solve (clauses: list[list[int]], literals: int) -> Optional [list[int]]:
     Returns a satisfying list of assignments if there exists one
     If the clause set is unsatisfiable, return [0]
     """
-    delta = []
+    
     model = Model(literals)
-    conflict_clause = []
+    conflict_clause = None
     clause_set = []
 
     # make a list of Clause objects out of a list of ints
@@ -36,7 +37,14 @@ def solve (clauses: list[list[int]], literals: int) -> Optional [list[int]]:
         
         #print(f"list: {clause}, Clause: {c.data}")
         clause_set.append(c)
+    print(f"Clauses: {clauses}")
+    return solve_helper(clause_set, model, conflict_clause)
 
+
+
+
+def solve_helper(clause_set: list[Clause], model: Model, conflict_clause: Optional[Clause]):
+    
     # TODO: once restart is done, use restart instead of while true
     while True:
 
@@ -44,23 +52,42 @@ def solve (clauses: list[list[int]], literals: int) -> Optional [list[int]]:
         if sat(clause_set,model):
             return model.to_list()
 
+        
         # get a failing clause, if any
-        failing_clause = check_falsify(clause_set,model)
+        conflicting_clause = check_falsify(clause_set,model)
 
         # if there's a failing clause and there are no guesses left to reverse in the model,
         # return UNSAT
-        if failing_clause != None and model.has_decide() == False:
+        if (conflicting_clause is not None) and (not model.has_decide()):
             return None
+
+        
 
         # if there is a failing clause and there is a guess that can be backtracked on,
         # run backtrack. currently just dpll backtrack,
         #  but conflict/explain/learn/backjump here in CDCL
-        if failing_clause != None:
-            backtrack_dpll(model)
+        if conflicting_clause is not None:
+            print(f"Conflicting clause: {conflicting_clause.to_list()}")
+            conflict_clause = conflicting_clause
+            learn_clause = conflict_clause.negated()
+            
+            for clause in clause_set:
+                if np.array_equal(learn_clause.data,clause.data):
+                    return None
+
+            print(f"Model before learn: {model.data}")
+            clause_set.append(learn_clause)
+            print(f"Clause set: {list(map(lambda x: x.to_list(), clause_set))}")
+            (backjump_level, negating_literal) = model.compute_level(learn_clause)
+            print(f"Negating literal: {negating_literal}")
+            model.pop_n(backjump_level,negating_literal)
+            conflict_clause = None
+            #backtrack_dpll(model)
             continue
 
         # run unit propagation as much as possible
         model_changed = propagate_possible(clause_set, model)
+        print(f"Model after propagation: {model.data}")
         if model_changed:
             continue
 
@@ -70,7 +97,6 @@ def solve (clauses: list[list[int]], literals: int) -> Optional [list[int]]:
             model.add_decide(decide_lit)
         else:
             break
-
 
 
 
@@ -219,12 +245,13 @@ def decide(clause_set, delta, model, conflict_clause):
     """
     return (clause_set, delta, model, conflict_clause)
 
-def conflict(clause_set, delta, model, conflict_clause):
+def conflict(clause_set: list[Clause], model: Model, conflict_clause: Optional[Clause]):
     """
     Checks if a conflict exists and if it does, adds a conflict clause.
     Otherwise just returns the passed parameters
     """
-    return (clause_set, delta, model, conflict_clause)
+        
+    return (clause_set, model, conflict_clause)
 
 def explain(clause_set, delta, model, conflict_clause):
     """
