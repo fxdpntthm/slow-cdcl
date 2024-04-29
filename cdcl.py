@@ -26,9 +26,9 @@ def solve (clauses: list[list[int]], literals: int) -> Optional [list[int]]:
     delta = []
     model = Model(literals)
     conflict_clause = []
+    clause_set = []
 
     # make a list of Clause objects out of a list of ints
-    clause_set = []
     for clause in clauses:
         c = Clause(literals)
         for lit in clause:
@@ -37,26 +37,12 @@ def solve (clauses: list[list[int]], literals: int) -> Optional [list[int]]:
         #print(f"list: {clause}, Clause: {c.data}")
         clause_set.append(c)
 
-    # once restart is done, restart instead of while true
+    # TODO: once restart is done, use restart instead of while true
     while True:
 
         # if the current model satisifies the clause set, return it
         if sat(clause_set,model):
-            sat_model = []
-            i = 1
-            while i <= literals:
-                if model.has(i):
-                    sat_model.append(i)
-                i += 1
-            
-            i = -1
-            while i >= -1 * literals:
-                if model.has(i):
-                    sat_model.append(i)
-                i -= 1
-
-            return sat_model
-
+            return model.to_list()
 
         # get a failing clause, if any
         failing_clause = check_falsify(clause_set,model)
@@ -138,13 +124,13 @@ def propagate_possible(clause_set: list[Clause], model: Model) -> bool:
     The model parameter is modified by the function
     """
 
-    # a clause set where each clause is the negation of a clause of the passed-in clause set
+    # a clause set of negated clauses
     negated_clauses = list(map(lambda x: x.negated(), clause_set))
     
     model_change = False
 
     while True:
-        unit_clause = float("inf")
+        unit_clause = None
 
         for i in range(len(clause_set)):
             clause = clause_set[i].to_list()
@@ -160,10 +146,11 @@ def propagate_possible(clause_set: list[Clause], model: Model) -> bool:
                     and (not model.has(negated[j]))
                     and (model.contains_clause(negation_minus_one))):
                     
-                    unit_clause = min(clause[j],unit_clause)
+                    unit_clause = clause[j]
+                    break
 
         # if there is a unit literal, add it to the model
-        if unit_clause != float("inf"):
+        if unit_clause != None:
             model.add(unit_clause)
             model_change = True
         else:
@@ -189,14 +176,14 @@ def decide_literal(clause_set,model):
     """
     Returns the smallest unassigned literal
     """
-    decide_lit = float("inf")
+    decide_lit = None
     for clause in clause_set:
         for literal in clause.to_list():
             if not model.has(literal) and not model.has(-1 * literal):
-                if abs(literal) < abs(decide_lit):
-                    decide_lit = literal
+                decide_lit = literal
+                break
 
-    if decide_lit == float("inf"):
+    if decide_lit == None:
         print("Cant decide anything...")
         return 0
 

@@ -121,7 +121,7 @@ if __name__ == "__main__":
             tsolver.set_option(":produce-models", "true")
             # print(skeleton)
             sat_model = solve(skeleton, len(skel_map))
-            # print("sat model: " + str(sat_model))
+            print("sat model: " + str(sat_model))
 
             if sat_model is None:
                 t2 = time.time()
@@ -148,7 +148,7 @@ if __name__ == "__main__":
                     blocking_clause_skeleton = build_skeleton_clause(blocking_clause, skel_map)
                     skeleton.append(blocking_clause_skeleton)
 
-                blocking_clause_skeleton.sort()
+                #blocking_clause_skeleton.sort()
                 
                 #print(f"blocking clause: {len(blocking_clause_skeleton)} {blocking_clause_skeleton}")
                 
