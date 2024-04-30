@@ -141,7 +141,7 @@ if __name__ == "__main__":
             while True:
                 # with  SatSolver() as ssolver:
                 tsolver.set_option(":produce-models", "true")
-                print(f"Clause set: {clause_set.__str__()}")
+                # print(f"Clause set: {clause_set.__str__()}")
                 # TODO: skeleton should be a list of Clause objects
                 sat_model = solve(clause_set, problem_size)
                 #print("sat model: " + str(sat_model))

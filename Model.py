@@ -63,9 +63,9 @@ class Model:
         """
         Returns true if literal is satisfied by the model
         """
-        if self.out_of_range(lit):
-            print(f"{lit} out of range of model {self.data[-1]}")
-            return False
+        # if self.out_of_range(lit):
+        #     print(f"{lit} out of range of model {self.data[-1]}")
+        #     return False
 
         return self.data[-1][lit] == 1
 
@@ -98,7 +98,7 @@ class Model:
         # flip the literal
         self.data[-1][negating_literal] = 0
         self.data[-1][-1 * negating_literal] = 1
-        print(f"Model after pop_n: {self.data}")
+        # print(f"Model after pop_n: {self.data}")
 
     def has_decide(self) -> bool:
         """
@@ -112,12 +112,12 @@ class Model:
         (ie. if there is a literal that is in the clause and the model)
         """
         i = 1
-        while i <= self.size:
+        while i <= cl.size:
             if  ((cl.data[i] == 1 and self.data[-1][i] == 1)
                 or (cl.data[-1 * i] == 1 and self.data[-1][-1 * i] == 1)):
                 return True
             i += 1
-
+        # print(f"satisfies_clause False\n {self.data[-1]}\n {cl}")
         return False
 
     def makes_unit(self, cl: Clause) -> (bool, Optional[int]):
@@ -125,38 +125,43 @@ class Model:
         Returns whether a clause is a unit clause
         If it is a unit clause, returns the unit literal
         Assmumes clause is consistent
-        i.e. forall i clause.data[i] and clause.data[-i] are never set to one at the same time
+        i.e.   forall i clause.data[i] == 1 <==> clause.data[-i] = 0
+           and forall i clause.data[-i] == 1 <==> clause.data[i] = 0
         """
 
         # falsifying = False
         unresolved = None
-
-        # obvious shortcut case
-        if cl.size == 1:
-            return (True, cl.data[1])
-
+        lit_count = 0
         i = 1
         while i <= self.size:
             while cl.data[i] == 0 and cl.data[-1*i] == 0 and i <= self.size:
                 i+=1
 
             if cl.data[i] == 1:
+                lit_count+=1
                 if self.has(i): # this clause is already satisfied so skip
                     return (False, None)
                 else:
-                    if unresolved == 0: unresolved = i
+                    if unresolved is None and not self.has(-1*i):
+                        unresolved = i
+                        i += 1
+                        continue
                     else: return (False, None) # the clause is unresolved
 
             if cl.data[-1*i] == 1:
+                lit_count+=1
                 if self.has(-1*i): # this clause is already satisfied so skip
                     return (False, None)
                 else:
-                    if unresolved == 0: unresolved = i
-                    else: return (False, None) # the clause is unresolved
+                    if unresolved is None and not self.has(i):
+                        unresolved = -1*i
+                        i += 1
+                        continue
+                    # else: return (False, None) # the clause is unresolved
             i += 1
 
         # at this point,  unresolved is non 0 value
-        assert unresolved != 0
+        assert unresolved is not None
         return (True,unresolved)
 
 
@@ -167,19 +172,26 @@ class Model:
         TODO: Find a bitwise operator to do this
         """
         i = 1
-        while i <= self.size:
-            if (not self.has(i)) and (not self.has(-1*i)):
+
+        unresolved = False
+
+        while i <= cl.size:
+            while (cl.data[i] == 0 and cl.data[-1*i] == 0 and i <= cl.size):
+                i += 1
+            if i == cl.size:
                 return False
 
-            if cl.data[i] == 1 and self.has(i):
+            if self.has(i) and cl.data[i] == 1:
                 return False
-
-            if cl.data[-1*i] == 1 and self.has(-1*i):
+            if self.has(-1*i) and cl.data[-1*i] == 1:
                 return False
-
+            if not (self.has(i) and self.has(-1*i)):
+                unresolved = True
             i += 1
 
-        return True
+        #print(f"falsifies_clause {not unresolved} \n {self.data[-1]}\n {cl}")
+        return (not unresolved)
+
 
     def compute_backjump_level(self, cl: Clause) -> (int,int):
         """

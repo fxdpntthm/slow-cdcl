@@ -85,6 +85,7 @@ def solve_helper(clause_set: list[Clause], model: Model, conflict_clause: Option
 
         # run decide
         decide_lit = decide_literal(clause_set,model)
+        print(f"decide {decide_lit}")
         if decide_lit != 0:
             model.add_decide(decide_lit)
         else:
@@ -180,7 +181,7 @@ def propagate_possible(clause_set: list[Clause], model: Model) -> bool:
 
         for clause in clause_set:
             (makes_unit, literal) = model.makes_unit(clause)
-
+            # print(f"makes_unit\n{model.data[-1]}\n{clause} {makes_unit} {literal}")
             if makes_unit:
                 unit_literal = literal
                 break
@@ -213,23 +214,30 @@ def decide_literal(clause_set: List[Clause], model: Model) -> int:
     """
     Returns the first unassigned literal
     """
-    decide_lit = None
-    for clause in clause_set:
-        i = 1
-        while i <= clause.size:
-            if clause.data[i] == 1 or clause.data[-1 * i] == 1:
-                if not model.has(i) and not model.has(-1 * i):
-                    decide_lit = i
-                    break
 
-            i += 1
+    i = 1
+    while i <= model.size:
+        if not (model.has(i) or model.has(-1*i)):
+            return i
+        i += 1
 
-    if decide_lit == None:
-        print("Cant decide anything...")
-        return 0
+    return 0
 
-    return decide_lit
+    # for clause in clause_set:
+    #     i = 1
+    #     while i <= clause.size:
+    #         if clause.data[i] == 1 or clause.data[-1 * i] == 1:
+    #             if not model.has(i) and not model.has(-1 * i):
+    #                 decide_lit = i
+    #                 break
 
+    #         i += 1
+
+    # if decide_lit == None:
+    #     print("Cant decide anything...")
+    #     return 0
+
+    # return decide_lit
 
 def decide(clause_set, delta, model, conflict_clause):
     """
