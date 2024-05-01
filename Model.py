@@ -9,8 +9,8 @@ class Model:
     def __init__(self, literals: int):
         self.data = [np.zeros(2 * literals + 1, dtype="int8")]
         self.size = literals
-        self.decides = []           
-        self.added = []
+        self.literal_lvls = {}
+        self.lit_lvl = 0
 
     def __str__(self):
         return self.data[-1].__str__()
@@ -43,7 +43,8 @@ class Model:
             return
 
         self.data[-1][lit] = 1
-        self.added.append(lit)
+        self.literal_lvls[lit] = self.lit_lvl
+        self.lit_lvl += 1
 
     def decide(self) -> int:
         """
@@ -51,7 +52,7 @@ class Model:
         """
 
         i = 1
-        while i <= self.size:
+        while i < self.size:
             if not (self.has(i) or self.has(-1*i)):
                 break
             i += 1
@@ -66,7 +67,6 @@ class Model:
         Copies the latest level, and adds the literal to the level
         """
         self.data.append(np.copy(self.data[-1]))
-        self.decides.append(lit)
 
         self.add(lit)
 
@@ -104,14 +104,12 @@ class Model:
         if not self.has_decide():
             return 0
 
-        decision = self.decides.pop()
         self.data.pop()
         return decision
 
     def pop_n(self, level: int, negating_literal: int):
 
         self.data = self.data[:level + 1]
-        self.decides = self.decides[:level + 1]
 
         if len(self.data) == 0:
             self.data = [np.zeros(2 * self.size + 1, dtype="int8")]
@@ -120,7 +118,7 @@ class Model:
         assert self.data[-1][negating_literal] == 1
 
         # flip the literal
-        # TODO: 
+        # TODO:
         self.data[-1][negating_literal] = 0
         self.data[-1][-1 * negating_literal] = 1
         # print(f"Model after pop_n: {self.data}")
@@ -129,7 +127,7 @@ class Model:
         """
         Returns true if there is something has been decided on in the model
         """
-        return len(self.decides) > 0
+        return len(self.data) > 1
 
     def satisfies_clause(self, cl: Clause) -> bool:
         """
@@ -220,25 +218,18 @@ class Model:
         # i has to be of size cl.size here
         return (count == cl.literal_size)
 
+    def compute_level(self, literal:int) -> int:
+        """
+        computes the level of the literal that is set
+        """
+        i = 0
+        while i < len(self.data):
+            if self.data[i][literal] == 0:
+                i += 1
+            else: return i
 
 
 
-        """while i <= cl.size:
-
-            if i == cl.size:
-                return False
-
-            if self.has(i) and cl.data[i] == 1:
-                return False
-            if self.has(-1*i) and cl.data[-1*i] == 1:
-                return False
-            if not (self.has(i) and self.has(-1*i)):
-                unresolved = True
-            i += 1
-
-        print(f"falsifies_clause {not unresolved} \n {self.data[-1]}\n {cl}")
-        return (not unresolved)
-"""
 
     def compute_backjump_level(self, cl: Clause) -> (int,int):
         """

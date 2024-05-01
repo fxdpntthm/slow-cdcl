@@ -33,9 +33,7 @@ class Clause:
         """
         Adds a literal to the clause
         """
-        if self.out_of_range(lit):
-            print(f"literal out of range: {lit}, clause: {self.data}")
-            return
+        assert not self.out_of_range(lit), f"literal out of range: {lit}, clause: {self.data}"
 
         if not self.consistent(lit):
             print(f"Clause has both literal and its negation: {self.data}")
