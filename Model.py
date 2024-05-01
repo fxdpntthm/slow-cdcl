@@ -11,6 +11,12 @@ class Model:
         self.size = literals
         self.decides = []     # keeping this because its required for DPLL backtrack
 
+    def __str__(self):
+        return self.data[-1].__str__()
+
+    def __repr__(self):
+        return self.__str__()
+
     def consistent(self, lit: int) -> bool:
         """
         Returns false if a negation of a literal (that is to be added) is true
@@ -92,7 +98,7 @@ class Model:
         if len(self.data) == 0:
             self.data = [np.zeros(2 * self.size + 1, dtype="int8")]
 
-        print(self.data, level, negating_literal)
+        #print(self.data, level, negating_literal)
         assert self.data[-1][negating_literal] == 1
 
         # flip the literal
@@ -138,7 +144,7 @@ class Model:
                     and (self.has(i) or self.has(-1 * i))):
                 i+=1
 
-            
+
 
             if cl.data[i] == 1:
                 lit_count+=1
@@ -177,21 +183,29 @@ class Model:
         TODO: Find a bitwise operator to do this
         """
         i = 1
-        
-        add = self.data[-1] + cl.data         
-        print(f"Added:\n{add}\nmodel:\n{self.data[-1]}\ncl:\n{cl.data}")   
-        while i <= self.size:
-            if add[i] != 1:    
-                return False
-            i += 1
+        count = 0
+        while i <= cl.size:
+            # while ((cl.data[i] == 0 or cl.data[-1 * i] == 0)
+            #        and i <= cl.size): i += 1
 
-        return True
+            if ((cl.data[i] == 1 and self.has(-1 * i))
+                  or (cl.data[-1 * i] == 1 and self.has(i))):
+                count += 1
 
-        
-        
+            # if (cl.data[i] == 1 and self.has(i)): return False # should never happen
+            # if (cl.data[-1*i] == 1 and self.has(-1*i)): return False # should never happen
+            i = i + 1
+
+
+        # print(f"---\nmodel:\n{self.data[-1]}\nclause:\n{cl}\n---{count} {cl.literal_size}\n")
+        # i has to be of size cl.size here
+        return (count == cl.literal_size)
+
+
+
 
         """while i <= cl.size:
-           
+
             if i == cl.size:
                 return False
 

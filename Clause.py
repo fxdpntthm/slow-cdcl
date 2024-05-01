@@ -9,6 +9,7 @@ class Clause:
 
         self.data = np.zeros(2 * literals + 1, dtype="int8")
         self.size = literals
+        self.literal_size = 0
 
     def __str__(self):
         return self.data.__str__()
@@ -40,6 +41,7 @@ class Clause:
             print(f"Clause has both literal and its negation: {self.data}")
 
         self.data[lit] = 1
+        self.literal_size += 1
 
     def remove(self, lit: int):
         """
