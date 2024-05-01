@@ -54,26 +54,17 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
         # print(f"Model:\n{model}\nUnresolved:\n{unresolved_clauses}")
 
         # run unit propagation as much as possible
-        (still_unresolved_clauses, new_unit_clauses) = propagate_possible(unresolved_clauses, model)
+        (unresolved_clauses, new_unit_clauses) = propagate_possible(unresolved_clauses, model)
         # print(f"After propagation: {still_unresolved_clauses}, {new_unit_clauses}")
-        unresolved_clauses = still_unresolved_clauses
+        print("Propogating...")
         satisfied_clauses.extend(new_unit_clauses)
 
         if len(new_unit_clauses) > 0:
             # it is possible that this propagate makes other unresolved clauses unit
             continue
 
-        # run decide
-        decide_lit = decide_literal(model)
-        print(f"decide {decide_lit}")
-        # print(f"Model: {model.data[-1]}")
-
-        if decide_lit == 0:
-            continue # AI: I still think this is wrong and we should never reach this stage
-            # if decide literal, decided on everything that is possible
-
-
-        model.add_decide(decide_lit)
+        # run decide as no propogation possible
+        model.decide()
 
         unresolved, resolved = [], []
 
@@ -195,85 +186,6 @@ def propagate_possible(unresolved_clauses: list[Clause], model: Model) -> (list[
         return (unresolved_clauses,[])
 
 
-
-
-"""
-    while True:
-        unit_literal = None
-        clause_unit = None
-        for clause in unresolved_clauses:
-
-            literal = model.makes_unit(clause)
-            # print(f"makes_unit\n{model.data[-1]}\n{clause} {makes_unit} {literal}")
-            if literal:
-                clause_unit = clause
-                unit_literal = literal
-                resolved.append(clause)
-                break
-            else:
-                unresolved.append(clause)
-
-        # if there is a unit literal, add it to the model
-        if unit_literal != None:
-            model.add(unit_literal)
-
-            resolved.append(clause_unit)
-            print(f"Model after propagation:\n{model.data[-1]}")
-            print(f"Unit clause:\n{clause_unit}")
-        else:
-            break
-
-    return (unresolved,resolved)
-"""
-
-def backtrack_dpll(model: Model):
-    """
-    DPLL backtrack (just reverses the latest decide)
-    The model parameter is modified by this function
-    """
-
-    top = model.pop_decide()
-    if top == 0:
-        print("Error: backtracking when you shouldn't be...")
-        print(model.print())
-        sys.exit()
-
-    model.add(-1 * top)
-
-def decide_literal(model: Model) -> int:
-    """
-    Returns the first unassigned literal
-    """
-
-    i = 1
-    while i <= model.size:
-        if not (model.has(i) or model.has(-1*i)):
-            return i
-        i += 1
-
-    return 0
-
-    # for clause in clause_set:
-    #     i = 1
-    #     while i <= clause.size:
-    #         if clause.data[i] == 1 or clause.data[-1 * i] == 1:
-    #             if not model.has(i) and not model.has(-1 * i):
-    #                 decide_lit = i
-    #                 break
-
-    #         i += 1
-
-    # if decide_lit == None:
-    #     print("Cant decide anything...")
-    #     return 0
-
-    # return decide_lit
-
-def decide(clause_set, delta, model, conflict_clause):
-    """
-    Generates a decision point in the model keeps track of where to back jump?
-    """
-    return (clause_set, delta, model, conflict_clause)
 
 def conflict(clause_set: list[Clause], model: Model, conflict_clause: Optional[Clause]):
     """

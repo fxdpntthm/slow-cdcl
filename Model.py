@@ -43,6 +43,23 @@ class Model:
 
         self.data[-1][lit] = 1
 
+
+    def decide(self) -> int:
+        """
+        Returns the first unassigned literal
+        """
+
+        i = 1
+        while i <= self.size:
+            if not (self.has(i) or self.has(-1*i)):
+                break
+            i += 1
+        print(f"decide {i}")
+        self.add_decide(i)
+
+        return i
+
+
     def add_decide(self, lit: int):
         """
         Copies the latest level, and adds the literal to the level
