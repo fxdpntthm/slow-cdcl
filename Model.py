@@ -9,7 +9,8 @@ class Model:
     def __init__(self, literals: int):
         self.data = [np.zeros(2 * literals + 1, dtype="int8")]
         self.size = literals
-        self.decides = []     # keeping this because its required for DPLL backtrack
+        self.decides = []           
+        self.added = []
 
     def __str__(self):
         return self.data[-1].__str__()
@@ -42,7 +43,7 @@ class Model:
             return
 
         self.data[-1][lit] = 1
-
+        self.added.append(lit)
 
     def decide(self) -> int:
         """
@@ -119,6 +120,7 @@ class Model:
         assert self.data[-1][negating_literal] == 1
 
         # flip the literal
+        # TODO: 
         self.data[-1][negating_literal] = 0
         self.data[-1][-1 * negating_literal] = 1
         # print(f"Model after pop_n: {self.data}")
@@ -250,6 +252,15 @@ class Model:
             i += 1
 
 
+    def check_clauses(self, unresolved_clauses: list[Clause]) -> (list[Clause],list[Clause]):
+        unresolved, resolved = [], []
+        for clause in unresolved_clauses:
+            if self.satisfies_clause(clause):
+                resolved.append(clause)
+            else:
+                unresolved.append(clause)
+
+        return (unresolved, resolved)
 
     def print(self):
         return str(self.data)

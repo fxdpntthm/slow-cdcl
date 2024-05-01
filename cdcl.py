@@ -66,14 +66,7 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
         # run decide as no propogation possible
         model.decide()
 
-        unresolved, resolved = [], []
-
-        for clause in unresolved_clauses:
-            if model.satisfies_clause(clause):
-                resolved.append(clause)
-            else:
-                unresolved.append(clause)
-
+        unresolved, resolved = model.check_clauses(unresolved_clauses)
 
         unresolved_clauses = unresolved
         satisfied_clauses.extend(resolved)
@@ -95,25 +88,19 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
         if conflicting_clause:
             print(f"Conflicting clause:\n{conflicting_clause}\nModel:\n{model}")
             conflict_clause = conflicting_clause
-            learn_clause = conflict_clause.negated()
-
+            conflict_clause = explain(unresolved_clauses + satisfied_clauses, model, conflict_clause)
+            
             for clause in unresolved_clauses + satisfied_clauses:
-                if np.array_equal(learn_clause.data,clause.data):
+                if np.array_equal(conflict_clause.data,clause.data):
                     # we have learned this clause already, so we have to have unsat at this point
-                    print(f"trying to add a learned clause again {learn_clause}")
+                    print(f"trying to add a learned clause again {conflict_clause}")
                     return None
 
-            #print(f"Model before learn: {model.data}")
-            unresolved_clauses.append(learn_clause)
-            print(f"learned clause {learn_clause}")
-            #print(f"Clause set: {list(map(lambda x: x.to_list(), clause_set))}")
-            (backjump_level, negating_literal) = model.compute_backjump_level(learn_clause)
-            print(f"backjump_level: {backjump_level}, negating_literal {negating_literal}")
-            model.pop_n(backjump_level,negating_literal)
-            conflict_clause = None
-            unresolved_clauses.extend(satisfied_clauses)
-            satisfied_clauses = [] # forget all the satisfying clauses
+            new_clause_set = learn_backjump(unresolved_clauses + satisfied_clauses, model, conflict_clause)
 
+            unresolved_clauses, satisfied_clauses = model.check_clauses(new_clause_set)
+
+            #print(f"Model before learn: {model.data}")
 
 
     # We have a model which satisfies all the clauses
@@ -129,6 +116,7 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
 RULES
 Are we implementing RESTART?
 """
+
 
 
 def sat(clause_set : list[Clause], model: Model) -> bool:
@@ -175,43 +163,98 @@ def propagate_possible(unresolved_clauses: list[Clause], model: Model) -> (list[
     if literal:
         model.add(literal)
         #print(f"Propagated\n{model}")
-        for clause in unresolved_clauses:
-            if model.satisfies_clause(clause):
-                resolved.append(clause)
-            else:
-                unresolved.append(clause)
-
-        return (unresolved, resolved)
+        return model.check_clauses(unresolved_clauses)
     else:
         return (unresolved_clauses,[])
 
 
-
-def conflict(clause_set: list[Clause], model: Model, conflict_clause: Optional[Clause]):
-    """
-    Checks if a conflict exists and if it does, adds a conflict clause.
-    Otherwise just returns the passed parameters
-    """
-
-    return (clause_set, model, conflict_clause)
-
-def explain(clause_set, delta, model, conflict_clause):
+def explain(clause_set: list[Clause], model: Model, conflict_clause: Clause) -> Clause:
     """
     Modifies the conflict clause
     """
-    return (clause_set, delta, model, conflict_clause)
 
-def fail(clause_set, delta, model, conflict_clause):
-    """
-    checks if a clause set is unsatisfiable
-    """
-    return (clause_set, delta, model, conflict_clause)
+    i = len(model.added) - 1
 
-def learn(clause_set, delta, model, conflict_clause):
+    while i >= 0:
+        if model.has(model.added[i]) and conflict_clause.has(-1 * model.added[i]):
+            clauses_with_l = filter(lambda x: x.has(model.added[i]), clause_set)
+            for clause in clauses_with_l:
+                copy = Clause(clause.size)
+                copy.data = np.copy(clause.data)
+                copy.remove(model.added[i])
+                if model.satisfies_clause(copy):
+                    conflict_clause.remove(-1*model.added[i]) 
+                    for lit in copy.negated().to_list():
+                        conflict_clause.add(lit)
+                        return conflict_clause
+        
+        i -= 1
+    
+
+    """for literal in rev:
+        if model.has(-1 * literal):
+            clauses_with_lit = filter(lambda x: x.has(-1*literal), clause_set)
+            c = []
+            for clause in clauses_with_lit:
+                copy = Clause(clause.size)
+                copy.data = np.copy(clause.data)
+                copy.remove(-1 * literal)
+                copy = copy.negated()
+                if model.satisfies_clause(copy):
+                    c.append(copy)
+
+            res = max(c, key=lambda x:)"""
+
+        
+                
+
+    return clause
+
+def learn_backjump(clause_set: list[Clause], model: Model, conflict_clause: Clause):
     """
     adds clauses from the conflict_clause to the clause_set
     """
-    return (clause_set, delta, model, conflict_clause)
+    m2 = 0
+    m2_lit = None
+    max = 0
+    max_literal = None
+    for literal in conflict_clause.to_list():
+        i = 0
+        # finding the first level where negation of the literal was set
+        while i < len(model.data):
+            if model.data[i][-1 * literal] == 0:
+                i += 1
+                continue
+            else:
+                # we want to find the literal that was first set at the highest level
+                if max < i:
+                    m2 = max
+                    m2_lit = max_literal
+                    max = i
+                    max_literal = -1 * literal
+                elif m2 < i:
+                    m2 = i
+                    m2_lit = -1 * literal
+
+            i += 1
+
+    latest_level = model.data[-1]
+    flip = self.decides[m2]
+    model.data = model.data[:m2]
+    
+
+    model.data[-1][-1*flip] = 1
+
+    """unresolved_clauses.append(learn_clause)
+    print(f"learned clause {learn_clause}")
+    #print(f"Clause set: {list(map(lambda x: x.to_list(), clause_set))}")
+    (backjump_level, negating_literal) = model.compute_backjump_level(learn_clause)
+    print(f"backjump_level: {backjump_level}, negating_literal {negating_literal}")
+    model.pop_n(backjump_level,negating_literal)
+    conflict_clause = None
+    unresolved_clauses.extend(satisfied_clauses)
+    satisfied_clauses = [] # forget all the satisfying clauses"""
+    return clause_set + [conflict_clause]
 
 
 """
