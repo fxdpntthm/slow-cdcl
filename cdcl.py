@@ -46,7 +46,7 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
 
 
     (unresolved_clauses, satisfied_clauses) = clause_set
-
+    conflict_clause = None
 
 
     # TODO: once restart is done, use restart instead of while true
@@ -90,6 +90,7 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
         # get a failing clause, if any
         conflicting_clause = check_falsify(unresolved_clauses,model)
 
+        if conflicting_clause: print(f"Model:\n{model}\nConflicting Clause:\n{conflicting_clause}")
         # if there's a failing clause and there are no decides left to reverse in the model
         # return UNSAT
         if conflicting_clause and (not model.has_decide()):
@@ -182,7 +183,7 @@ def propagate_possible(unresolved_clauses: list[Clause], model: Model) -> (list[
 
     if literal:
         model.add(literal)
-        print(f"Propagated\n{model}")
+        #print(f"Propagated\n{model}")
         for clause in unresolved_clauses:
             if model.satisfies_clause(clause):
                 resolved.append(clause)
