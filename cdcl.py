@@ -47,6 +47,7 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
     7. go to step 1
     """
 
+    # print(f"Start of solver: {model}\n{clause_set[0]}")
 
     (unresolved_clauses, satisfied_clauses) = clause_set
     conflict_clause = None
@@ -96,12 +97,12 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
             # Step 5
             #####
             conflict_clause = explain(unresolved_clauses + satisfied_clauses, model, conflicting_clause)
-            print(f"\n---\nModel:\n{model}\nConflicting clause:\n{conflicting_clause}")
+            # print(f"\n---\nModel:\n{model}\nConflicting clause:\n{conflicting_clause}")
             print(f"Explain:\n{conflict_clause}\ndelta:{unresolved_clauses + satisfied_clauses}\n---\n")
             for clause in unresolved_clauses + satisfied_clauses:
                 if np.array_equal(conflict_clause.data,clause.data):
                     # we have learned this clause already, so we have to have unsat at this point
-                    print(f"trying to add a learned clause again\n{conflict_clause}in\n{unresolved_clauses + satisfied_clauses}")
+                    print(f"WTF;trying to add a learned clause again\n{conflict_clause}in\n{unresolved_clauses + satisfied_clauses}")
                     return None
 
             #####
@@ -169,8 +170,8 @@ def propagate_possible(unresolved_clauses: list[Clause], model: Model) -> (list[
             model.add(literal)
             print(f"Propagating {literal}...")
             return model.check_clauses(unresolved_clauses)
-        else:
-            return (unresolved_clauses,[])
+            # print("no Prop")
+    return (unresolved_clauses,[])
 
 
 def explain(clause_set: list[Clause], model: Model, conflict_clause: Clause) -> Clause:
@@ -188,18 +189,18 @@ def explain(clause_set: list[Clause], model: Model, conflict_clause: Clause) -> 
         pivot = -1 * lit
 
         clauses_with_negl = list(filter(lambda x: x.has(pivot), clause_set))
-        print(f"\n---\nModel:\n{model}\ndelta:\n{clause_set}\nconflict_clause:\n{cc_lits}")
-        print(f"d:\n{restof_cc}\nclauses with {pivot}:\n{list(map(lambda x: x.to_list(), clauses_with_negl))}")
+        # print(f"\n---\nModel:\n{model}\ndelta:\n{clause_set}\nconflict_clause:\n{cc_lits}")
+        # print(f"d:\n{restof_cc}\nclauses with {pivot}:\n{list(map(lambda x: x.to_list(), clauses_with_negl))}")
         for c in clauses_with_negl:
             copy_c = Clause(c.size)
             copy_c.data = np.copy(c.data)
-            #print(f"copy_c: {copy_c}")
+            # print(f"copy_c: {copy_c}")
             copy_c.remove(pivot)
             neg_c = copy_c.negated()
-            print(f"candidate:\n{neg_c}")
+            # print(f"candidate:\n{neg_c}")
 
             if all([model.has(l) for l in neg_c.to_list()]):
-                print(f"m satisfies:\n{neg_c}\n---")
+                # print(f"m satisfies:\n{neg_c}\n---")
                 inconsistent = False
                 for l in copy_c.to_list():
                     if restof_cc.consistent(l):
@@ -211,7 +212,7 @@ def explain(clause_set: list[Clause], model: Model, conflict_clause: Clause) -> 
                 if inconsistent:
                     continue
 
-                print(f"new_explain_clause: {restof_cc.to_list()}")
+                #print(f"new_explain_clause: {restof_cc.to_list()}")
                 return restof_cc
 
 def learn_backjump(clause_set: list[Clause], model: Model, conflict_clause: Clause):
@@ -222,18 +223,18 @@ def learn_backjump(clause_set: list[Clause], model: Model, conflict_clause: Clau
 
     clause_set.append(conflict_clause)
 
-    print(f"Model:\n{model.data}\ncc:\n{conflict_clause.to_list()}")
+    # print(f"In L&B Model:\n{model.data}\ncc:\n{conflict_clause.to_list()}")
 
     levels = list(map(lambda x: (x, model.compute_level(-1*x)), conflict_clause.to_list()))
-    print(f"levels:{levels}")
+    # print(f"levels:{levels}")
     levels.sort(key=lambda x: x[1])
     backjump_level = levels[-2][1] if len(levels) > 1 else levels[0][1] - 1
     p_literal = levels[-1][0]
 
-    print(f"backjumping, level:{backjump_level} l:{p_literal}")
+    # print(f"backjumping, level:{backjump_level} l:{p_literal}")
 
-    model.data = model.data[:backjump_level]
-
+    model.data = model.data[:backjump_level] if backjump_level > 0 else [model.data[0]]
+    # print(f"Model:{model.data}")
     model.add(p_literal)
 
     return clause_set

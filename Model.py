@@ -43,8 +43,8 @@ class Model:
             return
 
         self.data[-1][lit] = 1
+        self.lit_lvl = self.lit_lvl + 1
         self.literal_lvls[lit] = self.lit_lvl
-        self.lit_lvl += 1
 
     def decide(self) -> int:
         """
@@ -153,15 +153,15 @@ class Model:
         """
 
         # falsifying = False
+        # print(f"Makes unit: {self}\n{cl}")
         unit_literal = None
         lit_count = 0
         i = 1
         while i <= self.size:
-            while (cl.data[i] == 0 and cl.data[-1*i] == 0 and i <= self.size
+            if (cl.data[i] == 0 and cl.data[-1*i] == 0 and i <= self.size
                     and (self.has(i) or self.has(-1 * i))):
                 i+=1
-
-
+                continue
 
             if cl.data[i] == 1:
                 lit_count+=1
@@ -185,7 +185,6 @@ class Model:
                         continue
                     else:
                         return None
-                    # else: return (False, None) # the clause is unresolved
             i += 1
 
         # at this point,  unresolved is non 0 value

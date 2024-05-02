@@ -3,15 +3,13 @@ Yet another inefficient and slow CDCL solver
 
 ### Dev Env Setup
 
-- Install cvc5
-`brew install cvc5` on MacOS or build your own using [installation instructions](https://cvc5.github.io/docs/cvc5-1.0.2/installation/installation.html)
-
-- Python 3.12 (assumes virtualenv pyenv etc. is install)
+- Python <= 3.10 (assumes virtualenv pyenv etc. is install)
 
 ```
 $ virtualenv -p python cdcl-env
 $ source cdcl-env/bin/activate
 $ pip install -r requirements.txt
+$ pysmt-install --z3
 ```
 
 - check installation
@@ -22,7 +20,7 @@ $ python -i example.py
 
 - run
 ```
-python -i cdcl.py <filename>
+python main.py <filename>
 ```
 
 #### Tests
@@ -42,7 +40,7 @@ python -i cdcl.py <filename>
 3. Convert them to a Propositional logic formula
 4. ask the CDCL solver if an assigment is possible
    - If it is satisfiable send it to the theory solver to come up with an assigment or output unsat
-5. come up with an unsat core -- details unclear.
+5. come up with an unsat core using z3
 
 
 
@@ -59,5 +57,8 @@ variable for Decide;
 - pySMT to parse - http://www.pysmt.org/
 
 #### Output
+Bunch of debug messages.
+Final message is `sat` or `unsat`
+In case of sat, a model is printed
 
-- Proj 2/3 - Not sure, but i think same as above?
+`perf-stats.txt` shows performance stats
