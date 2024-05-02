@@ -79,6 +79,9 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
 
         satisfied_clauses.extend(resolved)
 
+        # if len(unresolved_clauses) == 0:
+        #     return model.to_list()
+
         ####
         # Step 4.
         ####

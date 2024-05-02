@@ -1,14 +1,17 @@
-""" 
+"""
 Simple DIMACS parser script to run just the sat solver separately on DIMACS files
 Using this to test whether the SAT solver is working correctly
 Adapted from - https://kienyew.github.io/CDCL-SAT-Solver-from-Scratch/The-Implementation.html
 
-How to run - 
+How to run -
 python parse-dimacs.py <filename>
 """
 
 import sys
 from cdcl import solve
+from Model import Model
+from Clause import Clause
+
 
 def parse_dimacs_cnf(content: str):
     """
@@ -40,7 +43,16 @@ fname = sys.argv[1]
 
 content = str(open(fname,"r").read())
 
-clause_set,literals = parse_dimacs_cnf(content)
+skeleton,problem_size = parse_dimacs_cnf(content)
+clause_set = []
+# make a list of Clause objects out of a list of ints
+for clause in skeleton:
+    c = Clause(problem_size)
+    for lit in clause:
+        c.add(lit)
+        #print(f"list: {clause}, Clause: {c.data}")
+    clause_set.append(c)
+
 print(clause_set)
 print()
-print(solve(clause_set,literals))
+print(solve(clause_set,problem_size))
