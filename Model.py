@@ -36,7 +36,7 @@ class Model:
         """
 
         if not self.consistent(lit):
-            print(f"Adding {lit} to {self.data[-1]} will make it inconsistent")
+            print(f"Adding {lit} to {self.to_list()} will make it inconsistent")
 
         if self.out_of_range(lit):
             print(f"{lit} out of range of model {self.data[-1]}")
@@ -61,6 +61,13 @@ class Model:
 
         return i
 
+    def is_complete(self) -> bool:
+        i = 1
+        while i <= self.size:
+            if not (self.has(i) or self.has(-1*i)):
+                return False
+            i += 1
+        return True
 
     def add_decide(self, lit: int):
         """
@@ -154,12 +161,14 @@ class Model:
 
         # falsifying = False
         # print(f"Makes unit: {self}\n{cl}")
+        """
         unit_literal = None
+
         lit_count = 0
         i = 1
         while i <= self.size:
             while (cl.data[i] == 0 and cl.data[-1*i] == 0 and i <= self.size
-                    and (self.has(i) or self.has(-1 * i))):
+                    and not (self.has(i) or self.has(-1 * i))):
                 i+=1
 
             if cl.data[i] == 1:
@@ -167,7 +176,7 @@ class Model:
                 if self.has(i): # this clause is already satisfied so skip
                     return None
                 else:
-                    if unit_literal is None and not self.has(-1*i):
+                    if unit_literal is None and not self.has(-1*i) and lit_count < 2:
                         unit_literal = i
                         i += 1
                         continue
@@ -178,7 +187,7 @@ class Model:
                 if self.has(-1*i): # this clause is already satisfied so skip
                     return None
                 else:
-                    if unit_literal is None and not self.has(i):
+                    if unit_literal is None and not self.has(i) and lit_count < 2:
                         unit_literal = -1*i
                         i += 1
                         continue
@@ -189,6 +198,12 @@ class Model:
         # at this point,  unresolved is non 0 value
         assert unit_literal is not None
         return unit_literal
+        """
+        unresolved_literals = list(filter(lambda x: not self.has(-1*x), cl.to_list()))
+        if len(unresolved_literals) == 1:
+            return unresolved_literals[0]
+
+        return None
 
 
     def falsifies_clause(self, cl: Clause) -> bool:
@@ -241,15 +256,17 @@ class Model:
             i += 1
 
 
-    def check_clauses(self, unresolved_clauses: list[Clause]) -> (list[Clause],list[Clause]):
+    def check_clauses(self, unresolved_clauses: list[Clause]) -> (list[Clause],list[Clause], Optional[Clause]):
         unresolved, resolved = [], []
         for clause in unresolved_clauses:
             if self.satisfies_clause(clause):
                 resolved.append(clause)
+            elif self.falsifies_clause(clause):
+                return (unresolved, resolved, clause)
             else:
                 unresolved.append(clause)
 
-        return (unresolved, resolved)
+        return (unresolved, resolved, None)
 
     def print(self):
         return str(self.data)

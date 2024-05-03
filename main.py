@@ -19,6 +19,8 @@ from Clause import Clause
 import cProfile, pstats, io
 from pstats import SortKey
 
+import numpy as np
+
 pr = cProfile.Profile()
 
 
@@ -132,16 +134,19 @@ if __name__ == "__main__":
         # print("Boolean skeleton: " + str(skeleton))
 
 
+
         t1 = time.time()
         with Solver(name="z3", logic="QF_LRA", unsat_cores_mode="all") as tsolver:
             while True:
+                models = []
                 # with  SatSolver() as ssolver:
                 tsolver.set_option(":produce-models", "true")
                 # print(f"Clause set: {clause_set.__str__()}")
                 # TODO: skeleton should be a list of Clause objects
                 sat_model = solve(clause_set, problem_size)
-                #print("sat model: " + str(sat_model))
-
+                assert len(list(filter(lambda x: x == sat_model, models))) == 0
+                print("sat model: " + str(sat_model))
+                models.append(sat_model)
                 if sat_model is None:
                     t2 = time.time()
                     print("unsat")
@@ -164,10 +169,16 @@ if __name__ == "__main__":
                     for c in ucore:
                         blocking_clause = Or(list(map(lambda x: Not(x), c.args())))
                         blocking_clause_skeleton = build_skeleton_clause(blocking_clause, skel_map)
+                        
+                        
+                        
                         skeleton.append(blocking_clause_skeleton)
 
                 #blocking_clause_skeleton.sort()
                         blocking_clause = Clause(problem_size, init=blocking_clause_skeleton)
+                        
+                        assert len(list(filter(lambda x: blocking_clause.eq(x), clause_set))) == 0
+                        
                         clause_set.append(blocking_clause)
                         print(f"{ucore} {blocking_clause}")
                 #print(f"blocking clause: {len(blocking_clause_skeleton)} {blocking_clause_skeleton}")

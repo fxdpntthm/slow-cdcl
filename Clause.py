@@ -111,3 +111,6 @@ class Clause:
             i -= 1
 
         return cl
+
+    def eq(self, cl) -> bool:
+        return np.array_equal(self.data,cl.data)
