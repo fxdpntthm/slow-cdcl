@@ -185,8 +185,7 @@ def explain(clause_set: list[Clause], model: Model, conflict_clause: Clause) -> 
     cc_lits.sort(key = lambda x: model.literal_lvls[-1*x])
     cc_lits.reverse()
     for lit in cc_lits:
-        restof_cc =  Clause(conflict_clause.size)
-        restof_cc.data = np.copy(conflict_clause.data)
+        restof_cc =  Clause(conflict_clause.size, cc_lits)
         restof_cc.remove(lit)
 
         pivot = -1 * lit
@@ -196,7 +195,7 @@ def explain(clause_set: list[Clause], model: Model, conflict_clause: Clause) -> 
         # print(f"d:\n{restof_cc}\nclauses with {pivot}:\n{list(map(lambda x: x.to_list(), clauses_with_negl))}")
         for c in clauses_with_negl:
             copy_c = Clause(c.size)
-            copy_c.data = np.copy(c.data)
+            copy_c.copy(c)
             # print(f"copy_c: {copy_c}")
             copy_c.remove(pivot)
             neg_c = copy_c.negated()
@@ -234,7 +233,7 @@ def learn_backjump(clause_set: list[Clause], model: Model, conflict_clause: Clau
     backjump_level = levels[-2][1] if len(levels) > 1 else levels[0][1] - 1
     p_literal = levels[-1][0]
 
-    # print(f"backjumping, level:{backjump_level} l:{p_literal}")
+    print(f"backjumping, level:{backjump_level} l:{p_literal}")
 
     model.data = model.data[:backjump_level] if backjump_level > 0 else [model.data[0]]
     # print(f"Model:{model.data}")

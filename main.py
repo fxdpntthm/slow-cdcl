@@ -122,13 +122,9 @@ if __name__ == "__main__":
         clause_set = []
         # make a list of Clause objects out of a list of ints
         for clause in skeleton:
-            c = Clause(problem_size)
-            for lit in clause:
-                c.add(lit)
+            c = Clause(problem_size, clause)
             #print(f"list: {clause}, Clause: {c.data}")
             clause_set.append(c)
-
-
 
         # print("Clause Set: " + str(formula))
         # print("Atoms: " + str(formula.get_atoms()))
@@ -171,9 +167,7 @@ if __name__ == "__main__":
                         skeleton.append(blocking_clause_skeleton)
 
                 #blocking_clause_skeleton.sort()
-                        blocking_clause = Clause(problem_size)
-                        for lit in blocking_clause_skeleton:
-                            blocking_clause.add(lit)
+                        blocking_clause = Clause(problem_size, init=blocking_clause_skeleton)
                         clause_set.append(blocking_clause)
                         print(f"{ucore} {blocking_clause}")
                 #print(f"blocking clause: {len(blocking_clause_skeleton)} {blocking_clause_skeleton}")

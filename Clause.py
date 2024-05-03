@@ -5,11 +5,20 @@ class Clause:
     """
     Clause class that holds literals implemented as a numpy array
     """
-    def __init__(self, literals: int):
+    def __init__(self, literals: int, init=None):
 
         self.data = np.zeros(2 * literals + 1, dtype="int8")
         self.size = literals
         self.literal_size = 0
+        if init:
+            for l in init:
+                self.add(l)
+
+
+    def copy(self, c):
+        self.data = np.copy(c.data)
+        self.size = c.size
+        self.literal_size = c.literal_size
 
     def __str__(self):
         return self.data.__str__()

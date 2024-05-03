@@ -158,10 +158,9 @@ class Model:
         lit_count = 0
         i = 1
         while i <= self.size:
-            if (cl.data[i] == 0 and cl.data[-1*i] == 0 and i <= self.size
+            while (cl.data[i] == 0 and cl.data[-1*i] == 0 and i <= self.size
                     and (self.has(i) or self.has(-1 * i))):
                 i+=1
-                continue
 
             if cl.data[i] == 1:
                 lit_count+=1
