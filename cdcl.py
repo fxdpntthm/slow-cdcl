@@ -28,7 +28,7 @@ def solve (clause_set: list[Clause], literals: int) -> Optional[Clause]:
     model = Model(literals)
     conflict_clause = None
 
-    #print(f"Clauses: {clauses}")
+    print(f"Clauses: {clause_set}")
     return solve_helper((clause_set,[]), model)
 
 
@@ -54,7 +54,7 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
 
 
     # TODO: once restart is done, use restart instead of while true
-    while len(unresolved_clauses) > 0:
+    while len(unresolved_clauses) > 0 or conflict_clause is not None:
         # print(f"Model:\n{model}\nUnresolved:\n{unresolved_clauses}")
 
         # run unit propagation as much as possible
@@ -79,47 +79,43 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
                 model.decide()
             else:
                 unresolved, resolved, conflict_clause = model.check_clauses(unresolved_clauses)
-            continue
 
         else:
-        
-        # if len(unresolved_clauses) == 0:
-        #     return model.to_list()
 
-        ####
-        # Step 4.
-        ####
+            ####
+            # Step 4.
+            ####
 
-        
-        # if there's a failing clause and there are no decides left to reverse in the model
-        # return UNSAT
-            if conflict_clause and (not model.has_decide()):
+            # if there's a failing clause and there are no decides left to reverse in the model
+            # return UNSAT
+            if not model.has_decide():
                 print(f"Unsat Model:\n{model}\nConflicting Clause:\n{conflict_clause}")
                 return None
 
-            if conflict_clause:
 
-                #####
-                # Step 5
-                #####
-                conflict_clause = explain(unresolved_clauses + satisfied_clauses, model, conflict_clause)
-                print(f"\n---\nModel:\n{model}\nConflicting clause:\n{conflict_clause}")
-                print(f"Explain:\n{conflict_clause}\ndelta:{unresolved_clauses + satisfied_clauses}\n---\n")
-                for clause in unresolved_clauses + satisfied_clauses:
-                    if np.array_equal(conflict_clause.data,clause.data):
-                        # we have learned this clause already, so we have to have unsat at this point
-                        print(f"WTF;trying to add a learned clause again\n{conflict_clause}in\n{unresolved_clauses + satisfied_clauses}")
-                        return None
+            #####
+            # Step 5
+            #####
+            conflict_clause = explain(unresolved_clauses + satisfied_clauses, model, conflict_clause)
+            print(f"\n---\nModel:\n{model}\nConflicting clause:\n{conflict_clause}")
+            print(f"Explain:\n{conflict_clause}\ndelta:{unresolved_clauses + satisfied_clauses}\n---\n")
+            for clause in unresolved_clauses + satisfied_clauses:
+                if np.array_equal(conflict_clause.data,clause.data):
+                    # we have learned this clause already, so we have to have unsat at this point
+                    print(f"WTF;trying to add a learned clause again\n{conflict_clause}in\n{unresolved_clauses + satisfied_clauses}")
+                    return None
 
-                #####
-                # Step 6
-                #####
-                unresolved_clauses = learn_backjump(unresolved_clauses + satisfied_clauses, model, conflict_clause)
-                print(f"after backjump: {unresolved_clauses}\nModel:\n{model}")
-                conflict_clause = None
-                
+            #####
+            # Step 6
+            #####
+            unresolved_clauses = learn_backjump(unresolved_clauses + satisfied_clauses, model, conflict_clause)
+            print(f"after backjump: {unresolved_clauses}\nModel:\n{model}")
+
 
     # We have a model which satisfies all the clauses
+    assert conflict_clause is None, f"conflict clause is not None {conflict_clause}"
+    assert len(unresolved_clauses) == 0, f"unresolved clauses {unresolved_clauses}"
+
     return model.to_list()
 
 """
@@ -200,7 +196,7 @@ def explain(clause_set: list[Clause], model: Model, conflict_clause: Clause) -> 
 
         for c in clauses_with_negl:
             c_l = c.to_list()
-            
+
             copy_c = Clause(c.size)
             copy_c.copy(c)
             # print(f"copy_c: {copy_c}")
@@ -224,7 +220,7 @@ def explain(clause_set: list[Clause], model: Model, conflict_clause: Clause) -> 
                 #print(f"new_explain_clause: {restof_cc.to_list()}")
                 return restof_cc
 
-    
+
 
 def learn_backjump(clause_set: list[Clause], model: Model, conflict_clause: Clause):
     """
@@ -237,7 +233,7 @@ def learn_backjump(clause_set: list[Clause], model: Model, conflict_clause: Clau
     # print(f"In L&B Model:\n{model.data}\ncc:\n{conflict_clause.to_list()}")
 
     levels = list(map(lambda x: (x, model.compute_level(-1*x)), conflict_clause.to_list()))
-    # print(f"levels:{levels}")
+    print(f"levels:{levels}")
     levels.sort(key=lambda x: x[1])
     backjump_level = levels[-2][1] if len(levels) > 1 else levels[0][1] - 1
     p_literal = levels[-1][0]

@@ -169,18 +169,17 @@ if __name__ == "__main__":
                     for c in ucore:
                         blocking_clause = Or(list(map(lambda x: Not(x), c.args())))
                         blocking_clause_skeleton = build_skeleton_clause(blocking_clause, skel_map)
-                        
-                        
-                        
+
+
+
                         skeleton.append(blocking_clause_skeleton)
 
                 #blocking_clause_skeleton.sort()
                         blocking_clause = Clause(problem_size, init=blocking_clause_skeleton)
-                        
-                        assert len(list(filter(lambda x: blocking_clause.eq(x), clause_set))) == 0
-                        
-                        clause_set.append(blocking_clause)
                         print(f"{ucore} {blocking_clause}")
+                        assert len(list(filter(lambda x: blocking_clause.eq(x), clause_set))) == 0
+
+                        clause_set.append(blocking_clause)
                 #print(f"blocking clause: {len(blocking_clause_skeleton)} {blocking_clause_skeleton}")
                         tsolver.pop()
         sortby = SortKey.CUMULATIVE
