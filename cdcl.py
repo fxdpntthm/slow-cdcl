@@ -103,7 +103,7 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
             #print(f"Expalined conflicting clause:\n{conflict_clause}")
             # print(f"Explain:\n{conflict_clause}\ndelta:{unresolved_clauses + satisfied_clauses}\n---\n")
             for clause in unresolved_clauses + satisfied_clauses:
-                if np.array_equal(conflict_clause.data,clause.data):
+                if conflict_clause and clause.eq(conflict_clause):
                     # we have learned this clause already, so we have to have unsat at this point
                     #print(f"WTF;trying to add a learned clause again\n{conflict_clause}in\n{unresolved_clauses + satisfied_clauses}")
                     return None

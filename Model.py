@@ -1,13 +1,14 @@
 from typing import *
-import numpy as np
+
 from Clause import Clause
+from bitarray import bitarray
 
 class Model:
     """
     Model class that holds literal assignments in levels, implemented as list of numpy arrays
     """
     def __init__(self, literals: int):
-        self.data = [np.zeros(2 * literals + 1, dtype="int8")]
+        self.data = [bitarray([0] * (2 * literals + 1))]
         self.size = literals
         self.literal_lvls = {}
         self.lit_lvl = 0
@@ -73,12 +74,12 @@ class Model:
         """
         Copies the latest level, and adds the literal to the level
         """
-        self.data.append(np.copy(self.data[-1]))
+        self.data.append(self.data[-1].copy())
 
         self.add(lit)
 
 
-    def get_data(self) -> np.ndarray:
+    def get_data(self) -> bitarray:
         return self.data
 
     def contains_clause(self, cl: Clause) -> bool:
@@ -88,7 +89,7 @@ class Model:
         This is implemented by using (clause OR model) == model (where OR is element-wise OR),
         which is equivalent to the subset operation
         """
-        return np.array_equal((cl.data | self.data[-1]).astype("int8"), self.data[-1])
+        return (bitarray(cl.data) | self.data[-1]) == self.data[-1]
 
     def has(self, lit: int) -> bool:
         """
@@ -106,7 +107,6 @@ class Model:
         Pops the latest level in the model,
         and returns the literal that was decided
         at that level
-        TODO: nth level pop
         """
         if not self.has_decide():
             return 0
@@ -119,13 +119,12 @@ class Model:
         self.data = self.data[:level + 1]
 
         if len(self.data) == 0:
-            self.data = [np.zeros(2 * self.size + 1, dtype="int8")]
+            self.data = [bitarray([0] * (2 * self.size + 1))]
 
         #print(self.data, level, negating_literal)
         assert self.data[-1][negating_literal] == 1
 
         # flip the literal
-        # TODO:
         self.data[-1][negating_literal] = 0
         self.data[-1][-1 * negating_literal] = 1
         # print(f"Model after pop_n: {self.data}")
@@ -141,15 +140,14 @@ class Model:
         Returns true if the model satisfies the clause
         (ie. if there is a literal that is in the clause and the model)
         """
-        i = 1
-        while i <= cl.size:
-            if  ((cl.data[i] == 1 and self.data[-1][i] == 1)
-                or (cl.data[-1 * i] == 1 and self.data[-1][-1 * i] == 1)):
-                return True
-            i += 1
-
-        return False
-
+        #create bitarray out of clause
+        b = bitarray(cl.data.tolist())
+        
+        # run bitwise model AND clause and see if there are any 1's in the result 
+        # (ie. at least 1 thing that is both in the model and the clause)
+        return (self.data[-1] & b).any()
+        
+       
     def makes_unit(self, cl: Clause) -> Optional[int]:
         """
         Returns whether a clause is a unit clause
@@ -199,8 +197,6 @@ class Model:
         return unit_literal
 
              
-        
-
         """unresolved_literals = list(filter(lambda x: not self.has(-1*x), cl.to_list()))
         if len(unresolved_literals) == 1:
             #print(f"Propogating... {unresolved_literals[0]}")
@@ -213,32 +209,20 @@ class Model:
         """
         Returns true if the model falsifies the clause
         (ie. model has a negation for every literal in the clause)
-        TODO: Find a bitwise operator to do this
         """
-        i = 1
-        count = 0
-        while i <= cl.size:
-            # while ((cl.data[i] == 0 or cl.data[-1 * i] == 0)
-            #        and i <= cl.size): i += 1
 
-            if ((cl.data[i] == 1 and self.has(-1 * i))
-                  or (cl.data[-1 * i] == 1 and self.has(i))):
-                count += 1
+        b = bitarray(cl.data.tolist())
+        # get no of 1's (ie. no of literals) in the clause
+        count = b.count(1)
+        
+        lits = b[1:]    #slices everything other than index 0
+        lits.reverse()  #reverse in place
+        b[1:] = lits    #replace the literal indices (index 0 not used so stays the same)
 
-
-
-            # if (cl.data[i] == 1 and self.has(i)): return False # should never happen
-            # if (cl.data[-1*i] == 1 and self.has(-1*i)): return False # should never happen
-            i = i + 1
-
-        #print(f"{self.size}\nModel:\n{self}\nclause:\n{cl}")
-
-        #print(f"{count} {cl.literal_size}\n")
-        # i has to be of size cl.size here
-
-        return (count == cl.literal_size)
-
-        #return all([self.has(-1*l) for l in cl.to_list()])
+        # do a model AND negated clause and return True if the no of 1's 
+        # (ie. no of literals that are also in the model) 
+        # is the same as the no of literals in the model
+        return (self.data[-1] & b).count(1) == count
 
 
     def compute_level(self, literal:int) -> int:
