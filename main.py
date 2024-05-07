@@ -176,7 +176,7 @@ if __name__ == "__main__":
 
                 #blocking_clause_skeleton.sort()
                         blocking_clause = Clause(problem_size, init=blocking_clause_skeleton)
-                        print(f"{ucore} {blocking_clause}")
+                        print(f"Blocking clause: {blocking_clause.to_list()}")
                         assert len(list(filter(lambda x: blocking_clause.eq(x), clause_set))) == 0
 
                         clause_set.append(blocking_clause)

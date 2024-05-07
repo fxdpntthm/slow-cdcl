@@ -58,7 +58,7 @@ class Clause:
             print(f"Literal already not in clause: {lit} Clause: {self.data}")
 
         self.data[lit] = 0
-
+        self.literal_size -= 1
 
     def has(self,lit: int) -> bool:
         """
