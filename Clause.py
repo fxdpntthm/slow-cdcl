@@ -47,8 +47,13 @@ class Clause:
         if not self.consistent(lit):
             print(f"Clause has both literal and its negation: {self.data}")
 
+        if self.data[lit] == 1:
+            print(f"Literal already in clause: {lit} Clause: {self.data}")
+        else:
+            self.literal_size += 1
+
         self.data[lit] = 1
-        self.literal_size += 1
+        
 
     def remove(self, lit: int):
         """
@@ -76,7 +81,7 @@ class Clause:
         """
         negated = Clause(self.size)
         negated.data = np.copy(self.data)
-
+        negated.literal_size = self.literal_size
         i = 1
         while i <= self.size:
             negated.data[i], negated.data[-1*i] = negated.data[-1*i], negated.data[i]

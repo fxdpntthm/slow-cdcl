@@ -98,7 +98,8 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
             #####
             #print(f"Before explain\n{conflict_clause.to_list()}")
             conflict_clause = explain(unresolved_clauses + satisfied_clauses, model, conflict_clause)
-            #print(f"\n---\nModel:\n{model.to_list()}\nConflicting clause:\n{conflict_clause.to_list()}")
+            #print(f"Conflicting clause:\n{conflict_clause.to_list()} {len(conflict_clause.to_list())}")
+            #print(f"Conflicting clause:\n{conflict_clause}")
             #print(f"Explain:\n{conflict_clause}\ndelta:{unresolved_clauses + satisfied_clauses}\n---\n")
             for clause in unresolved_clauses + satisfied_clauses:
                 if np.array_equal(conflict_clause.data,clause.data):
@@ -220,7 +221,7 @@ def explain(clause_set: list[Clause], model: Model, conflict_clause: Clause) -> 
                 if inconsistent:
                     continue
 
-                print(f"new_explain_clause:\n{restof_cc.to_list()}")
+                #print(f"new_explain_clause:\n{restof_cc.to_list()}")
                 return restof_cc
 
 

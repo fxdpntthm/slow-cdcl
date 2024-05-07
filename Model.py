@@ -212,7 +212,7 @@ class Model:
         (ie. model has a negation for every literal in the clause)
         TODO: Find a bitwise operator to do this
         """
-        """i = 1
+        i = 1
         count = 0
         while i <= cl.size:
             # while ((cl.data[i] == 0 or cl.data[-1 * i] == 0)
@@ -222,17 +222,20 @@ class Model:
                   or (cl.data[-1 * i] == 1 and self.has(i))):
                 count += 1
 
+            
+
             # if (cl.data[i] == 1 and self.has(i)): return False # should never happen
             # if (cl.data[-1*i] == 1 and self.has(-1*i)): return False # should never happen
             i = i + 1
 
+        #print(f"{self.size}\nModel:\n{self}\nclause:\n{cl}")
 
         #print(f"{count} {cl.literal_size}\n")
         # i has to be of size cl.size here
         
-        return (count == len(cl.to_list()))"""
+        return (count == cl.literal_size)
         
-        return all([self.has(-1*l) for l in cl.to_list()])
+        #return all([self.has(-1*l) for l in cl.to_list()])
         
 
     def compute_level(self, literal:int) -> int:
