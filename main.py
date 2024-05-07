@@ -11,7 +11,7 @@ from IO import read_input
 from cdcl import solve
 
 import sys
-from os.path import exists
+from os.path import exists, basename
 import time
 from Model import Model
 from Clause import Clause
@@ -177,7 +177,7 @@ if __name__ == "__main__":
                 #print(f"blocking clause: {len(blocking_clause_skeleton)} {blocking_clause_skeleton}")
                         tsolver.pop()
         sortby = SortKey.CUMULATIVE
-        with open("perf-stats.txt", "w", encoding="utf-8") as s:
+        with open(f"perf-stats-{basename(fpath)}.txt", "w", encoding="utf-8") as s:
             ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
             ps.print_stats()
         

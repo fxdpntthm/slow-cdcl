@@ -81,9 +81,9 @@ class Clause:
         negated.data = self.data.copy()
         negated.literal_size = self.literal_size
         
-        lits = negated.data[1:]
-        lits.reverse()
-        negated.data[1:] = lits
+        negated.data.reverse()
+        
+        negated.data >>= 1
 
         return negated
 
