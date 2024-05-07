@@ -56,7 +56,7 @@ class Model:
             if not (self.has(i) or self.has(-1*i)):
                 break
             i += 1
-        # print(f"decide {i}")
+        #print(f"decide {i}")
         self.add_decide(i)
 
         return i
@@ -158,44 +158,55 @@ class Model:
         i.e.   forall i clause.data[i] == 1 <==> clause.data[-i] = 0
            and forall i clause.data[-i] == 1 <==> clause.data[i] = 0
         """
+        
+        unit_literal = None
 
-        # unit_literal = None
+        i = 1
+        while i <= self.size:
+            while cl.data[i] == 0 and cl.data[-1*i] == 0 and i <= self.size:
+                i += 1
+            
+            if i > self.size:
+                return unit_literal
+            
+            if cl.data[i] == 1:
+                if self.has(i):
+                    #print(f"has {i} {cl.to_list()}")
+                    return None
+                
+                if (not self.has(i)) and (not self.has(-1*i)):
+                    if unit_literal:
+                        return None
+                    else:
+                        unit_literal = i
+            
+                
 
-        # i = 1
-        # while i <= self.size:
-        #     while (cl.data[i] == 0 and cl.data[-1*i] == 0 and i <= self.size
-        #             and not (self.has(i) or self.has(-1 * i))):
-        #         i+=1
+            else:
+                if self.has(-1*i):
+                    #print(f"has {-1*i} {cl.to_list()}")
+                    return None
+                
+                if (not self.has(i)) and (not self.has(-1*i)):
+                    if unit_literal:
+                        return None
+                    else:
+                        unit_literal = -1*i
+            
+            i += 1
+                
+        
+        return unit_literal
 
-        #     if cl.data[i] == 1:
-        #         if self.has(i):
-        #             return None # clause is satisfied nothing to do
-        #         if unit_literal is None and not self.has(-1*i):
-        #             unit_literal = i
-        #             i += 1
-        #             continue
-        #         else: return None # the clause is unresolved
+             
+        
 
-        #     if cl.data[-1*i] == 1:
-        #         if self.has(-1*i):
-        #             return None # clause is satisfied nothing to do
-        #         if unit_literal is None and not self.has(i):
-        #             unit_literal = -1*i
-        #         else:
-        #             return None
-        #     i += 1
-
-        # # # at this point,  unresolved is non 0 value
-        # assert unit_literal is not None
-        # print(f"Propogating... {unit_literal}")
-        # return unit_literal
-
-        unresolved_literals = list(filter(lambda x: not self.has(-1*x), cl.to_list()))
+        """unresolved_literals = list(filter(lambda x: not self.has(-1*x), cl.to_list()))
         if len(unresolved_literals) == 1:
-            print(f"Propogating... {unresolved_literals[0]}")
+            #print(f"Propogating... {unresolved_literals[0]}")
             return unresolved_literals[0]
 
-        return None
+        return None"""
 
 
     def falsifies_clause(self, cl: Clause) -> bool:
@@ -264,6 +275,7 @@ class Model:
                 resolved.append(clause)
             elif self.falsifies_clause(clause):
                 conflict_clause = clause
+                unresolved.append(clause)
             else:
                 unresolved.append(clause)
             i += 1

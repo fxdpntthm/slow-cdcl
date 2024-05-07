@@ -129,21 +129,23 @@ if __name__ == "__main__":
         # print("Boolean skeleton: " + str(skeleton))
 
         t1 = time.time()
+        count = 50
         with Solver(name="z3", logic="QF_LRA", unsat_cores_mode="all") as tsolver:
-            while True:
+            while count > 0:
+                count -= 1
                 models = []
                 # with  SatSolver() as ssolver:
                 tsolver.set_option(":produce-models", "true")
-                tsolver.set_option("core.minimize", "true")
+                #tsolver.set_option(":core.minimize", "true")
                 sat_model = solve(clause_set, problem_size)
-                # assert len(list(filter(lambda x: x == sat_model, models))) == 0
-                print(f"sat model:\n{sat_model}")
-                # models.append(sat_model)
+                assert len(list(filter(lambda x: x == sat_model, models))) == 0
+                #print(f"sat model:\n{sat_model}")
+                models.append(sat_model)
                 if sat_model is None:
                     t2 = time.time()
                     print("unsat")
                     break
-                # print(f"sat model {sat_model}")
+                #print(f"sat model {sat_model}")
                 # print(f"tsolver formula {And([build_formula([[l]], rev_map) for l in sat_model ])}")
                 tsolver.push()
                 tsolver.add_assertion(And([build_formula([[l]], rev_map) for l in sat_model ]))
@@ -168,7 +170,7 @@ if __name__ == "__main__":
 
                 #blocking_clause_skeleton.sort()
                         blocking_clause = Clause(problem_size, init=blocking_clause_skeleton)
-                        print(f"Blocking clause: {blocking_clause}")
+                        #print(f"Blocking clause: {blocking_clause.to_list()}")
                         #assert len(list(filter(lambda x: blocking_clause.eq(x), clause_set))) == 0
 
                         clause_set.append(blocking_clause)
@@ -178,4 +180,8 @@ if __name__ == "__main__":
         with open("perf-stats.txt", "w", encoding="utf-8") as s:
             ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
             ps.print_stats()
-        print(t2 - t1)
+        
+        if count == 0:
+            print("unknown")
+        else:
+            print(t2 - t1)

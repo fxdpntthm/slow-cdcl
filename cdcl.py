@@ -28,7 +28,7 @@ def solve (clause_set: list[Clause], literals: int) -> Optional[Clause]:
     model = Model(literals)
     conflict_clause = None
 
-    #print(f"Clauses: {clause_set}")
+    #print(f"Clauses: {list(map(lambda x: x.to_list(), clause_set))}")
     return solve_helper((clause_set,[]), model)
 
 
@@ -51,7 +51,7 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
 
     (unresolved_clauses, satisfied_clauses) = clause_set
     conflict_clause = None
-
+    total_len = len(unresolved_clauses)
 
     # TODO: once restart is done, use restart instead of while true
     while len(unresolved_clauses) > 0 or conflict_clause is not None:
@@ -63,10 +63,11 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
         #####
 
         if conflict_clause is None:
-            print(f"unresolved clauses {len(unresolved_clauses), len(satisfied_clauses)}")
+            assert len(unresolved_clauses) + len(satisfied_clauses) == total_len, f"{(len(unresolved_clauses), len(satisfied_clauses), total_len)}"
+            #print(f"unresolved clauses {len(unresolved_clauses), len(satisfied_clauses)}")
             (unresolved_clauses, new_unit_clauses, conflict_clause) = propagate_possible(unresolved_clauses, model)
             satisfied_clauses.extend(new_unit_clauses)
-
+           # print(f"new unit clauses: {new_unit_clauses}")
             if len(new_unit_clauses) > 0:
                 # it is possible that this propagate makes other unresolved clauses unit
                 continue
@@ -78,10 +79,10 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
             if not model.is_complete():
                 model.decide()
             else:
-                unresolved_clauses, satisfied_clauses, conflict_clause = model.check_clauses(unresolved_clauses)
-
+                unresolved_clauses, new_sat_clauses, conflict_clause = model.check_clauses(unresolved_clauses)
+                satisfied_clauses.extend(new_sat_clauses)
         else:
-            print("can no longer propogate")
+            #print("can no longer propogate")
             ####
             # Step 4.
             ####
@@ -99,12 +100,12 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
             #print(f"Before explain\n{conflict_clause.to_list()}")
             conflict_clause = explain(unresolved_clauses + satisfied_clauses, model, conflict_clause)
             #print(f"Conflicting clause:\n{conflict_clause.to_list()} {len(conflict_clause.to_list())}")
-            print(f"Expalined conflicting clause:\n{conflict_clause}")
+            #print(f"Expalined conflicting clause:\n{conflict_clause}")
             # print(f"Explain:\n{conflict_clause}\ndelta:{unresolved_clauses + satisfied_clauses}\n---\n")
             for clause in unresolved_clauses + satisfied_clauses:
                 if np.array_equal(conflict_clause.data,clause.data):
                     # we have learned this clause already, so we have to have unsat at this point
-                    print(f"WTF;trying to add a learned clause again\n{conflict_clause}in\n{unresolved_clauses + satisfied_clauses}")
+                    #print(f"WTF;trying to add a learned clause again\n{conflict_clause}in\n{unresolved_clauses + satisfied_clauses}")
                     return None
 
             #####
@@ -173,7 +174,7 @@ def propagate_possible(unresolved_clauses: list[Clause], model: Model) -> (list[
 
         if literal is not None:
             model.add(literal)
-            # print(f"Propagating {literal}...")
+            #print(f"Propagating {literal}...")
             return model.check_clauses(unresolved_clauses)
             # print("no Prop")
     return model.check_clauses(unresolved_clauses)
@@ -185,6 +186,7 @@ def explain(clause_set: list[Clause], model: Model, conflict_clause: Clause) -> 
     cc_lits = conflict_clause.to_list()
     cc_lits.sort(key = lambda x: model.literal_lvls[-1*x])
     cc_lits.reverse()
+    #print(f"conflict_clause: {conflict_clause.to_list()}")
     for lit in cc_lits:
         restof_cc =  Clause(conflict_clause.size, cc_lits)
         restof_cc.remove(lit)
@@ -192,8 +194,10 @@ def explain(clause_set: list[Clause], model: Model, conflict_clause: Clause) -> 
         pivot = -1 * lit
 
         clauses_with_negl = list(filter(lambda x: x.has(pivot), clause_set))
-        # print(f"\n---\nModel:\n{model}\ndelta:\n{clause_set}\nconflict_clause:\n{cc_lits}")
-        # print(f"d:\n{restof_cc}\nclauses with {pivot}:\n{list(map(lambda x: x.to_list(), clauses_with_negl))}")
+        #print(f"\n---\nModel:\n{model.to_list()}\ndelta:\n{clause_set}\nconflict_clause:\n{cc_lits}")
+        #print(f"d:\n{restof_cc.to_list()}\nclauses with {pivot}:\n{list(map(lambda x: x.to_list(), clauses_with_negl))}")
+        
+       # print(f"model: {model.to_list()}")
         clause_set_l = list(map(lambda x: x.to_list(), clause_set))
         conflict_clause_l = conflict_clause.to_list()
 
@@ -218,6 +222,7 @@ def explain(clause_set: list[Clause], model: Model, conflict_clause: Clause) -> 
                         break
                 # print(f"new conflict_clause: {restof_cc}")
                 if inconsistent:
+                    
                     continue
 
                 #print(f"new_explain_clause:\n{restof_cc.to_list()}")
@@ -240,7 +245,7 @@ def learn_backjump(clause_set: list[Clause], model: Model, conflict_clause: Clau
     backjump_level = levels[-2][1] if len(levels) > 1 else levels[0][1] - 1
     p_literal = levels[-1][0]
 
-    print(f"backjumping, level:{backjump_level} lit:{p_literal}")
+    #print(f"backjumping, level:{backjump_level} lit:{p_literal}")
 
     current = model.to_list()
 
@@ -252,7 +257,7 @@ def learn_backjump(clause_set: list[Clause], model: Model, conflict_clause: Clau
 
     # print(f"Model:{model.data}")
     model.add(p_literal)
-    clause_set.append(conflict_clause)
+    #clause_set.append(conflict_clause)
 
     return clause_set
 

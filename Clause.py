@@ -44,8 +44,8 @@ class Clause:
         """
         assert not self.out_of_range(lit), f"literal out of range: {lit}, clause: {self.data}"
 
-        if not self.consistent(lit):
-            print(f"Clause has both literal and its negation: {self.data}")
+        #if not self.consistent(lit):
+            #print(f"Clause has both literal and its negation: {self.data}")
 
         if not (self.data[lit] == 1):
             self.literal_size += 1
@@ -57,8 +57,8 @@ class Clause:
         """
         Removes a literal from a clause
         """
-        if self.data[lit] == 0:
-            print(f"Literal already not in clause: {lit} Clause: {self.data}")
+        #if self.data[lit] == 0:
+            #print(f"Literal already not in clause: {lit} Clause: {self.data}")
 
         self.data[lit] = 0
         self.literal_size -= 1
@@ -68,7 +68,7 @@ class Clause:
         Returns true if the clause has a literal
         """
         if self.out_of_range(lit):
-            print(f"literal out of range: {lit}, size: {self.data}")
+            #print(f"literal out of range: {lit}, size: {self.data}")
             return
 
         return self.data[lit] == 1
