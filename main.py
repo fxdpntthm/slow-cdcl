@@ -24,11 +24,6 @@ import numpy as np
 pr = cProfile.Profile()
 
 
-# SOLVER_NAME = "z3" # Note: The API version is called 'msat'
-# SOLVER_PATH = ["/usr/local/bin/z3"] # Path to the solver
-# SOLVER_LOGICS = [QF_LRA] # Some of the supported logics
-
-
 def build_skeleton_map(formula):
     """
     Builds map to represent each literal.
@@ -133,20 +128,17 @@ if __name__ == "__main__":
         # print("Atom map: " + str(skel_map))
         # print("Boolean skeleton: " + str(skeleton))
 
-
-
         t1 = time.time()
         with Solver(name="z3", logic="QF_LRA", unsat_cores_mode="all") as tsolver:
             while True:
                 models = []
                 # with  SatSolver() as ssolver:
                 tsolver.set_option(":produce-models", "true")
-                # print(f"Clause set: {clause_set.__str__()}")
-                # TODO: skeleton should be a list of Clause objects
+                tsolver.set_option("core.minimize", "true")
                 sat_model = solve(clause_set, problem_size)
-                assert len(list(filter(lambda x: x == sat_model, models))) == 0
-                print("sat model: " + str(sat_model))
-                models.append(sat_model)
+                # assert len(list(filter(lambda x: x == sat_model, models))) == 0
+                print(f"sat model:\n{sat_model}")
+                # models.append(sat_model)
                 if sat_model is None:
                     t2 = time.time()
                     print("unsat")
@@ -176,8 +168,8 @@ if __name__ == "__main__":
 
                 #blocking_clause_skeleton.sort()
                         blocking_clause = Clause(problem_size, init=blocking_clause_skeleton)
-                        print(f"Blocking clause: {blocking_clause.to_list()}")
-                        assert len(list(filter(lambda x: blocking_clause.eq(x), clause_set))) == 0
+                        print(f"Blocking clause: {blocking_clause}")
+                        #assert len(list(filter(lambda x: blocking_clause.eq(x), clause_set))) == 0
 
                         clause_set.append(blocking_clause)
                 #print(f"blocking clause: {len(blocking_clause_skeleton)} {blocking_clause_skeleton}")

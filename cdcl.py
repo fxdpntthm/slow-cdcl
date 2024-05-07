@@ -62,8 +62,8 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
         # Step 1.
         #####
 
-        # print(f"After propagation: {still_unresolved_clauses}, {new_unit_clauses}")
         if conflict_clause is None:
+            print(f"unresolved clauses {len(unresolved_clauses), len(satisfied_clauses)}")
             (unresolved_clauses, new_unit_clauses, conflict_clause) = propagate_possible(unresolved_clauses, model)
             satisfied_clauses.extend(new_unit_clauses)
 
@@ -74,14 +74,14 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
             ####
             # Step 3
             ####
-            # run decide as no propogation possible
+            # run decide as no propagation possible
             if not model.is_complete():
                 model.decide()
             else:
                 unresolved_clauses, satisfied_clauses, conflict_clause = model.check_clauses(unresolved_clauses)
 
         else:
-
+            print("can no longer propogate")
             ####
             # Step 4.
             ####
@@ -99,8 +99,8 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
             #print(f"Before explain\n{conflict_clause.to_list()}")
             conflict_clause = explain(unresolved_clauses + satisfied_clauses, model, conflict_clause)
             #print(f"Conflicting clause:\n{conflict_clause.to_list()} {len(conflict_clause.to_list())}")
-            #print(f"Conflicting clause:\n{conflict_clause}")
-            #print(f"Explain:\n{conflict_clause}\ndelta:{unresolved_clauses + satisfied_clauses}\n---\n")
+            print(f"Expalined conflicting clause:\n{conflict_clause}")
+            # print(f"Explain:\n{conflict_clause}\ndelta:{unresolved_clauses + satisfied_clauses}\n---\n")
             for clause in unresolved_clauses + satisfied_clauses:
                 if np.array_equal(conflict_clause.data,clause.data):
                     # we have learned this clause already, so we have to have unsat at this point
@@ -166,15 +166,14 @@ def propagate_possible(unresolved_clauses: list[Clause], model: Model) -> (list[
     The model parameter is modified by the function
     """
 
-    (unresolved, resolved) = ([], [])
     #print(f"unresolved clauses {unresolved_clauses}")
     literal = None
     for clause in unresolved_clauses:
         literal = model.makes_unit(clause)
 
-        if literal:
+        if literal is not None:
             model.add(literal)
-            print(f"Propagating {literal}...")
+            # print(f"Propagating {literal}...")
             return model.check_clauses(unresolved_clauses)
             # print("no Prop")
     return model.check_clauses(unresolved_clauses)
@@ -232,7 +231,7 @@ def learn_backjump(clause_set: list[Clause], model: Model, conflict_clause: Clau
     computes where to backjump and performs the backjump
     """
     assert conflict_clause is not None
-    
+
     #print(f"In L&B Model:\n{model.to_list()}\ncc:\n{conflict_clause.to_list()}")
 
     levels = list(map(lambda x: (x, model.compute_level(-1*x)), conflict_clause.to_list()))
@@ -241,7 +240,7 @@ def learn_backjump(clause_set: list[Clause], model: Model, conflict_clause: Clau
     backjump_level = levels[-2][1] if len(levels) > 1 else levels[0][1] - 1
     p_literal = levels[-1][0]
 
-    #print(f"backjumping, level:{backjump_level} l:{p_literal}")
+    print(f"backjumping, level:{backjump_level} lit:{p_literal}")
 
     current = model.to_list()
 
@@ -249,7 +248,7 @@ def learn_backjump(clause_set: list[Clause], model: Model, conflict_clause: Clau
 
     for literal in current:
         if not model.has(literal):
-            del model.literal_lvls[literal]    
+            del model.literal_lvls[literal]
 
     # print(f"Model:{model.data}")
     model.add(p_literal)

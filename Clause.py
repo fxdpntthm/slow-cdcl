@@ -47,13 +47,11 @@ class Clause:
         if not self.consistent(lit):
             print(f"Clause has both literal and its negation: {self.data}")
 
-        if self.data[lit] == 1:
-            print(f"Literal already in clause: {lit} Clause: {self.data}")
-        else:
+        if not (self.data[lit] == 1):
             self.literal_size += 1
 
         self.data[lit] = 1
-        
+
 
     def remove(self, lit: int):
         """

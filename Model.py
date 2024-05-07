@@ -56,7 +56,7 @@ class Model:
             if not (self.has(i) or self.has(-1*i)):
                 break
             i += 1
-        print(f"decide {i}")
+        # print(f"decide {i}")
         self.add_decide(i)
 
         return i
@@ -147,7 +147,7 @@ class Model:
                 or (cl.data[-1 * i] == 1 and self.data[-1][-1 * i] == 1)):
                 return True
             i += 1
-        # print(f"satisfies_clause False\n {self.data[-1]}\n {cl}")
+
         return False
 
     def makes_unit(self, cl: Clause) -> Optional[int]:
@@ -159,48 +159,40 @@ class Model:
            and forall i clause.data[-i] == 1 <==> clause.data[i] = 0
         """
 
-        # falsifying = False
-        # print(f"Makes unit: {self}\n{cl}")
-        """
-        unit_literal = None
+        # unit_literal = None
 
-        lit_count = 0
-        i = 1
-        while i <= self.size:
-            while (cl.data[i] == 0 and cl.data[-1*i] == 0 and i <= self.size
-                    and not (self.has(i) or self.has(-1 * i))):
-                i+=1
+        # i = 1
+        # while i <= self.size:
+        #     while (cl.data[i] == 0 and cl.data[-1*i] == 0 and i <= self.size
+        #             and not (self.has(i) or self.has(-1 * i))):
+        #         i+=1
 
-            if cl.data[i] == 1:
-                lit_count+=1
-                if self.has(i): # this clause is already satisfied so skip
-                    return None
-                else:
-                    if unit_literal is None and not self.has(-1*i) and lit_count < 2:
-                        unit_literal = i
-                        i += 1
-                        continue
-                    else: return None # the clause is unresolved
+        #     if cl.data[i] == 1:
+        #         if self.has(i):
+        #             return None # clause is satisfied nothing to do
+        #         if unit_literal is None and not self.has(-1*i):
+        #             unit_literal = i
+        #             i += 1
+        #             continue
+        #         else: return None # the clause is unresolved
 
-            if cl.data[-1*i] == 1:
-                lit_count+=1
-                if self.has(-1*i): # this clause is already satisfied so skip
-                    return None
-                else:
-                    if unit_literal is None and not self.has(i) and lit_count < 2:
-                        unit_literal = -1*i
-                        i += 1
-                        continue
-                    else:
-                        return None
-            i += 1
+        #     if cl.data[-1*i] == 1:
+        #         if self.has(-1*i):
+        #             return None # clause is satisfied nothing to do
+        #         if unit_literal is None and not self.has(i):
+        #             unit_literal = -1*i
+        #         else:
+        #             return None
+        #     i += 1
 
-        # at this point,  unresolved is non 0 value
-        assert unit_literal is not None
-        return unit_literal
-        """
+        # # # at this point,  unresolved is non 0 value
+        # assert unit_literal is not None
+        # print(f"Propogating... {unit_literal}")
+        # return unit_literal
+
         unresolved_literals = list(filter(lambda x: not self.has(-1*x), cl.to_list()))
         if len(unresolved_literals) == 1:
+            print(f"Propogating... {unresolved_literals[0]}")
             return unresolved_literals[0]
 
         return None
@@ -222,7 +214,7 @@ class Model:
                   or (cl.data[-1 * i] == 1 and self.has(i))):
                 count += 1
 
-            
+
 
             # if (cl.data[i] == 1 and self.has(i)): return False # should never happen
             # if (cl.data[-1*i] == 1 and self.has(-1*i)): return False # should never happen
@@ -232,11 +224,11 @@ class Model:
 
         #print(f"{count} {cl.literal_size}\n")
         # i has to be of size cl.size here
-        
+
         return (count == cl.literal_size)
-        
+
         #return all([self.has(-1*l) for l in cl.to_list()])
-        
+
 
     def compute_level(self, literal:int) -> int:
         """
@@ -276,7 +268,6 @@ class Model:
                 unresolved.append(clause)
             i += 1
 
-        
         return (unresolved, resolved, conflict_clause)
 
     def print(self):
