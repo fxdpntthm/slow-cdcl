@@ -1,5 +1,5 @@
 from typing import *
-import numpy as np
+from bitarray import bitarray
 
 class Clause:
     """
@@ -7,7 +7,7 @@ class Clause:
     """
     def __init__(self, literals: int, init=None):
 
-        self.data = np.zeros(2 * literals + 1, dtype="int8")
+        self.data = bitarray([0] * (2 * literals + 1))
         self.size = literals
         self.literal_size = 0
         if init:
@@ -16,7 +16,7 @@ class Clause:
 
 
     def copy(self, c):
-        self.data = np.copy(c.data)
+        self.data = c.data.copy()
         self.size = c.size
         self.literal_size = c.literal_size
 
@@ -78,22 +78,15 @@ class Clause:
         Returns a negated clause object (ie. every literal in the clause is negated)
         """
         negated = Clause(self.size)
-        negated.data = np.copy(self.data)
+        negated.data = self.data.copy()
         negated.literal_size = self.literal_size
-        i = 1
-        while i <= self.size:
-            negated.data[i], negated.data[-1*i] = negated.data[-1*i], negated.data[i]
-            i += 1
+        
+        lits = negated.data[1:]
+        lits.reverse()
+        negated.data[1:] = lits
 
         return negated
 
-    def negated_minus_one(self, lit: int):
-        """
-        Used in unit propagation
-        """
-        negated = self.negated()
-        negated.remove(-1 * lit)
-        return negated
 
     def to_list(self) -> list[int]:
         """
@@ -116,4 +109,4 @@ class Clause:
         return cl
 
     def eq(self, cl) -> bool:
-        return np.array_equal(self.data,cl.data)
+        return self.data == cl.data

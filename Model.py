@@ -140,12 +140,10 @@ class Model:
         Returns true if the model satisfies the clause
         (ie. if there is a literal that is in the clause and the model)
         """
-        #create bitarray out of clause
-        b = bitarray(cl.data.tolist())
         
         # run bitwise model AND clause and see if there are any 1's in the result 
         # (ie. at least 1 thing that is both in the model and the clause)
-        return (self.data[-1] & b).any()
+        return (self.data[-1] & cl.data).any()
         
        
     def makes_unit(self, cl: Clause) -> Optional[int]:
@@ -211,18 +209,12 @@ class Model:
         (ie. model has a negation for every literal in the clause)
         """
 
-        b = bitarray(cl.data.tolist())
-        # get no of 1's (ie. no of literals) in the clause
-        count = b.count(1)
-        
-        lits = b[1:]    #slices everything other than index 0
-        lits.reverse()  #reverse in place
-        b[1:] = lits    #replace the literal indices (index 0 not used so stays the same)
+        negated = cl.negated()
 
         # do a model AND negated clause and return True if the no of 1's 
         # (ie. no of literals that are also in the model) 
         # is the same as the no of literals in the model
-        return (self.data[-1] & b).count(1) == count
+        return (negated.data | self.data[-1]) == self.data[-1]
 
 
     def compute_level(self, literal:int) -> int:
