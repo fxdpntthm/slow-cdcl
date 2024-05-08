@@ -129,14 +129,15 @@ if __name__ == "__main__":
         # print("Boolean skeleton: " + str(skeleton))
 
         t1 = time.time()
-        count = 50
+        
         with Solver(name="z3", logic="QF_LRA", unsat_cores_mode="all") as tsolver:
+            count = 5000
             while count > 0:
                 count -= 1
                 models = []
                 # with  SatSolver() as ssolver:
                 tsolver.set_option(":produce-models", "true")
-                #tsolver.set_option(":core.minimize", "true")
+                #tsolver.set_option("smt.core.minimize", "True")
                 sat_model = solve(clause_set, problem_size)
                 assert len(list(filter(lambda x: x == sat_model, models))) == 0
                 #print(f"sat model:\n{sat_model}")
@@ -153,8 +154,8 @@ if __name__ == "__main__":
                     print("sat")
                     m = tsolver.get_model()
                     t2 = time.time()
-                    for v in free_vars:
-                        print(f"{v} := {m.get_value(v)}")
+                    #for v in free_vars:
+                    #    print(f"{v} := {m.get_value(v)}")
                     break
                 else:
                     ucore = tsolver.get_unsat_core()

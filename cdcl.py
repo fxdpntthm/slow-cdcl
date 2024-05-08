@@ -105,7 +105,7 @@ def solve_helper(clause_set: (list[Clause], list[Clause]), model: Model) -> Opti
             for clause in unresolved_clauses + satisfied_clauses:
                 if conflict_clause and clause.eq(conflict_clause):
                     # we have learned this clause already, so we have to have unsat at this point
-                    #print(f"WTF;trying to add a learned clause again\n{conflict_clause}in\n{unresolved_clauses + satisfied_clauses}")
+                    print(f"WTF;trying to add a learned clause again\n{conflict_clause}in\n{unresolved_clauses + satisfied_clauses}")
                     return None
 
             #####
