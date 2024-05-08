@@ -2,7 +2,7 @@
 ;; Folder cvc5/test/regress/cli/regress0
 ;; Modified
 
-(set-option :incremental false)
+
 (set-logic QF_LRA)
 (declare-fun x_34 () Real)
 (declare-fun x_13 () Real)

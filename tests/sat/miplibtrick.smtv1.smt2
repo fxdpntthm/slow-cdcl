@@ -2,7 +2,6 @@
 ;; Folder cvc5/test/regress/cli/regress0/arith
 ;; Modified
 
-(set-option :incremental false)
 (set-info :status sat)
 (set-logic QF_LRA)
 (declare-fun tmp1 () Real)

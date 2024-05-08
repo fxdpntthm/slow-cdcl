@@ -2,7 +2,7 @@
 ;; Folder cvc5/test/regress/cli/regress2/lemmas
 ;; Modified
 
-(set-option :incremental false)
+
 (set-info :source "TTA Startup. Bruno Dutertre (bruno@csl.sri.com)")
 (set-info :status unsat)
 (set-info :category "industrial")

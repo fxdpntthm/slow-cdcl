@@ -2,7 +2,7 @@
 ;; Folder cvc5/test/regress/cli/regress0/arith
 ;; Modified
 
-(set-option :incremental false)
+
 (set-info :status sat)
 (set-info :category "crafted")
 (set-info :difficulty "0")
