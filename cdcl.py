@@ -183,6 +183,7 @@ def explain(clause_set: list[Clause], model: Model, conflict_clause: Clause) -> 
     """
     Modifies the conflict clause
     """
+
     cc_lits = conflict_clause.to_list()
     cc_lits.sort(key = lambda x: model.literal_lvls[-1*x])
     cc_lits.reverse()
@@ -197,12 +198,9 @@ def explain(clause_set: list[Clause], model: Model, conflict_clause: Clause) -> 
         #print(f"\n---\nModel:\n{model.to_list()}\ndelta:\n{clause_set}\nconflict_clause:\n{cc_lits}")
         #print(f"d:\n{restof_cc.to_list()}\nclauses with {pivot}:\n{list(map(lambda x: x.to_list(), clauses_with_negl))}")
         
-       # print(f"model: {model.to_list()}")
-        clause_set_l = list(map(lambda x: x.to_list(), clause_set))
-        conflict_clause_l = conflict_clause.to_list()
+        # print(f"model: {model.to_list()}")
 
         for c in clauses_with_negl:
-            c_l = c.to_list()
 
             copy_c = Clause(c.size)
             copy_c.copy(c)
@@ -211,23 +209,19 @@ def explain(clause_set: list[Clause], model: Model, conflict_clause: Clause) -> 
             neg_c = copy_c.negated()
             # print(f"candidate:\n{neg_c}")
 
-            if all([model.has(l) for l in neg_c.to_list()]):
+            if model.contains_clause(neg_c):
                 # print(f"m satisfies:\n{neg_c}\n---")
-                inconsistent = False
-                for l in copy_c.to_list():
-                    if restof_cc.consistent(l):
-                        restof_cc.add(l)
-                    else:
-                        inconsistent = True
-                        break
-                # print(f"new conflict_clause: {restof_cc}")
-                if inconsistent:
-                    
-                    continue
 
+                restof_cc.data |= copy_c.data
+
+                i = 1
+                while i <= restof_cc.size:
+                    if restof_cc.has(i) and restof_cc.has(-1*i):
+                        continue
+                    i += 1
                 #print(f"new_explain_clause:\n{restof_cc.to_list()}")
                 return restof_cc
-
+    
 
 
 def learn_backjump(clause_set: list[Clause], model: Model, conflict_clause: Clause):
