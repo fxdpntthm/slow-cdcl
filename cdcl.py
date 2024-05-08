@@ -3,7 +3,6 @@ import sys
 from Model import Model
 from Clause import Clause
 from typing import *
-import numpy as np
 
 """
 The main file that gives an assignment to a Propositional Boolean Logic formula in a CNF format

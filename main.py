@@ -19,7 +19,6 @@ from Clause import Clause
 import cProfile, pstats, io
 from pstats import SortKey
 
-import numpy as np
 
 pr = cProfile.Profile()
 

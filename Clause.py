@@ -3,7 +3,7 @@ from bitarray import bitarray
 
 class Clause:
     """
-    Clause class that holds literals implemented as a numpy array
+    Clause class that holds literals implemented as a bitarray
     """
     def __init__(self, literals: int, init=None):
 

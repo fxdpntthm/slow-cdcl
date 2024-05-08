@@ -1,5 +1,4 @@
-BitVector==3.5.0
+bitarray==2.9.2
 cvc5==1.1.2
 numpy==1.26.4
 PySMT==0.9.5
-bitarray==2.9.2

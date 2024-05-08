@@ -5,7 +5,7 @@ from bitarray import bitarray
 
 class Model:
     """
-    Model class that holds literal assignments in levels, implemented as list of numpy arrays
+    Model class that holds literal assignments in levels, implemented as list of bitarrays
     """
     def __init__(self, literals: int):
         self.data = [bitarray([0] * (2 * literals + 1))]
