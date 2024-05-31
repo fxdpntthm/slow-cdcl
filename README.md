@@ -1,5 +1,5 @@
 # slow-cdcl
-Yet another inefficient and slow CDCL solver
+Yet another inefficient and slow SMT solver using a slow and inefficient hand crafted CDCL solver and using z3 as a theory solver
 
 ### Dev Env Setup
 
