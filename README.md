@@ -24,17 +24,13 @@ python main.py <filename>
 ```
 
 #### Tests
-- in the `tests` folder, just copied all the examples from from piazza/project description
+- in the `tests` folder
 
-### Project 2:
-
-#### Tasks: Part A
+#### Tasks
 
 1. Build a CDCL solver
    - Use an appropriate term representation of propositional logic.
    - Use the appropriate translation of the logic rules to come up with an assignment
-
-#### Tasks: Part B
 1. Interface the CDCL solver with the LIA theory formulas
 2. Parse the smt-lib2 files and store them in an appropriate AST
 3. Convert them to a Propositional logic formula
